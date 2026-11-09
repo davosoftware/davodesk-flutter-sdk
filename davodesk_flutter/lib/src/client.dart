@@ -8,6 +8,7 @@ import 'package:logging/logging.dart';
 
 import 'data/repositories/chat_repository.dart';
 import 'data/repositories/seen_repository.dart';
+import 'data/repositories/seen_repository.dart' as seen show isUnread;
 import 'data/repositories/session_repository.dart';
 import 'data/services/api_service.dart';
 import 'data/services/chat_socket.dart';
@@ -145,6 +146,9 @@ class DavoDeskClient {
     if (ticket.updatedAt case final at?) await _seen.mark(ticket.id, at);
     _recount();
   }
+
+  /// Whether [ticket] changed since the customer last looked, as [unread] counts it.
+  bool isUnread(TicketSummary ticket) => seen.isUnread(ticket, _seen.markers);
 
   /// Sends the customer's message in the conversation.
   Future<ChatAck> send(String text) => _chat.send(text);

@@ -6,11 +6,14 @@ import '../theme.dart';
 /// says: Reply when the team waits for them, Solved, Closed (final), and Open for the
 /// rest, including a state the SDK doesn't know.
 class StateChip extends StatelessWidget {
-  /// Creates the chip for a ticket's [status].
-  const StateChip({super.key, required this.status});
+  /// Creates the chip for a ticket's [status], followed by its [reference] when given.
+  const StateChip({super.key, required this.status, this.reference});
 
   /// The API's status, such as `pending`.
   final String status;
+
+  /// The ticket's reference, such as `#9BBC55`.
+  final String? reference;
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +31,7 @@ class StateChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(999),
       ),
       child: Text(
-        label,
+        reference == null ? label : '$label · $reference',
         style: TextStyle(
           color: color,
           fontSize: 12,
