@@ -1,0 +1,5 @@
+# Each folder has its own .gitignore for its build output; these cover the whole repo.
+.env
+!.env.example
+.superpowers/
+screens-*

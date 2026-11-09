@@ -1,0 +1,23 @@
+name: davodesk_example
+description: "A pretend company app for trying the DavoDesk Flutter SDK."
+publish_to: none
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.13.4
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  # The SDK from this repo, never from pub.dev, so a change shows here at once.
+  davodesk_flutter:
+    path: ../davodesk_flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
