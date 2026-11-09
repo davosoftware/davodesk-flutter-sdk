@@ -10,10 +10,18 @@ void main() {
   late Process server;
 
   setUp(() async {
-    server = await Process.start('dart', [
-      'run',
-      'bin/server.dart',
-    ], environment: {'PORT': port});
+    server = await Process.start(
+      'dart',
+      ['run', 'bin/server.dart'],
+      // The server refuses to start without its settings; these are test values.
+      environment: {
+        'PORT': port,
+        'DAVODESK_API_URL': 'http://127.0.0.1:3100',
+        'DAVODESK_CHANNEL_ID': 'ch_test',
+        'DAVODESK_SIGNING_KEY_ID': 'sk_test',
+        'DAVODESK_SIGNING_SECRET': 'test-secret',
+      },
+    );
     // The server prints once it listens.
     await server.stdout.first;
   });
