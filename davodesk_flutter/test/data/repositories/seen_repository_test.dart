@@ -1,9 +1,27 @@
+import 'dart:async';
+
 import 'package:davodesk_flutter/davodesk_flutter.dart';
 import 'package:davodesk_flutter/src/data/repositories/seen_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shared_preferences_platform_interface/in_memory_shared_preferences_async.dart';
 import 'package:shared_preferences_platform_interface/shared_preferences_async_platform_interface.dart';
+
+/// Device storage whose reads wait for [gate].
+final class GatedPreferences extends InMemorySharedPreferencesAsync {
+  GatedPreferences(super.data) : super.withData();
+
+  final gate = Completer<void>();
+
+  @override
+  Future<String?> getString(
+    String key,
+    SharedPreferencesOptions options,
+  ) async {
+    await gate.future;
+    return super.getString(key, options);
+  }
+}
 
 TicketSummary ticket(String id, String created, String updated) =>
     TicketSummary(
@@ -82,6 +100,37 @@ void main() {
         await SharedPreferencesAsync().getString('davodesk.seen.ch_1.unknown'),
         contains('t1'),
       );
+    },
+  );
+
+  test(
+    'a second load waits for the first, so a mark keeps the stored markers',
+    () async {
+      final preferences = GatedPreferences({
+        'davodesk.seen.ch_1.example-ada': '{"t0":"2026-11-01T09:00:00.000Z"}',
+      });
+      SharedPreferencesAsyncPlatform.instance = preferences;
+      final store = SeenStore();
+      final first = store.load('ch_1', 'example-ada');
+      var secondDone = false;
+      final second = store
+          .load('ch_1', 'example-ada')
+          .then((_) => secondDone = true);
+      await pumpEventQueue();
+      expect(secondDone, isFalse);
+
+      preferences.gate.complete();
+      await second;
+      await store.mark('t1', DateTime.utc(2026, 11, 5, 10));
+      await first;
+      const both = {
+        't0': '2026-11-01T09:00:00.000Z',
+        't1': '2026-11-05T10:00:00.000Z',
+      };
+      expect(store.markers, both);
+      final again = SeenStore();
+      await again.load('ch_1', 'example-ada');
+      expect(again.markers, both);
     },
   );
 

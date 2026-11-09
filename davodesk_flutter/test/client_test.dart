@@ -184,6 +184,7 @@ void main() {
     final (:client, :api, :sockets, identities: _) = arrange();
     api.supportMode = 'assistant_only';
     await client.start();
+    await pumpEventQueue();
     expect(sockets, isEmpty);
     expect(api.ticketReads, 0);
     client.dispose();

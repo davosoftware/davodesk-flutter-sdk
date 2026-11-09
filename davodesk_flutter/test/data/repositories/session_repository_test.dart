@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:davodesk_flutter/davodesk_flutter.dart';
@@ -21,6 +22,13 @@ http.Response opened({int expiresIn = 1800}) => http.Response(
     'brand_id': 'app_1',
     'end_user': {'kind': 'identified', 'name': 'Chukwu Obi'},
   }),
+  200,
+  headers: {'content-type': 'application/json'},
+);
+
+/// An opened session whose token is [token].
+http.Response tokenResponse(String token) => http.Response(
+  jsonEncode({'session_token': token, 'expires_in': 1800, 'brand_id': 'app_1'}),
   200,
   headers: {'content-type': 'application/json'},
 );
@@ -201,6 +209,85 @@ void main() {
       expect(session.subject, isNull);
       async.elapse(const Duration(hours: 1));
       expect(opens(calls), 1);
+      session.dispose();
+    });
+  });
+
+  test('an identity function that throws before returning is TOKEN_FAILED', () {
+    fakeAsync((async) {
+      final (:session, calls: _, identities: _) = build(
+        identityToken: () => throw StateError('No backend'),
+      );
+      session.ensure();
+      async.flushMicrotasks();
+      expect(
+        session.state,
+        isA<SessionUnavailable>().having((s) => s.code, 'code', 'TOKEN_FAILED'),
+      );
+      session.dispose();
+    });
+  });
+
+  test('a logout while the identity token is on its way opens nothing', () {
+    fakeAsync((async) {
+      final gate = Completer<String?>();
+      final (:session, :calls, identities: _) = build(
+        identityToken: () => gate.future,
+      );
+      session.ensure();
+      async.flushMicrotasks();
+      session.logout();
+      async.flushMicrotasks();
+      gate.complete(identity('example-ada'));
+      async.elapse(const Duration(hours: 1));
+      expect(session.state, isA<SessionIdle>());
+      expect(session.subject, isNull);
+      expect(opens(calls), 0);
+      session.dispose();
+    });
+  });
+
+  test('a session that opens after logout is ended, and the next customer gets their own', () {
+    fakeAsync((async) {
+      final answers = [Completer<http.Response>(), Completer<http.Response>()];
+      final calls = <String>[];
+      var opened = 0;
+      final client = MockClient((request) {
+        calls.add('${request.method} ${request.url.path}');
+        if (request.url.path.endsWith('/logout')) {
+          return Future.value(
+            http.Response('{"ended":true}', 200, request: request),
+          );
+        }
+        return answers[opened++].future;
+      });
+      var who = 'example-ada';
+      final session = DavoDeskSession(
+        api: DavoDeskApi(
+          baseUrl: Uri.parse('https://api.test'),
+          client: client,
+        ),
+        channelId: 'ch_1',
+        identityToken: () async => identity(who),
+        random: () => 0.5,
+      );
+      session.ensure();
+      async.flushMicrotasks();
+      session.logout();
+      who = 'example-ben';
+      SessionState? next;
+      session.ensure().then((state) => next = state);
+      async.flushMicrotasks();
+
+      answers[0].complete(tokenResponse('s-ada'));
+      answers[1].complete(tokenResponse('s-ben'));
+      async.flushMicrotasks();
+      expect(
+        next,
+        isA<SessionReady>().having((s) => s.token, 'token', 's-ben'),
+      );
+      expect(session.subject, 'example-ben');
+      expect(calls, contains('POST /v1/end-user-sessions/logout'));
       session.dispose();
     });
   });

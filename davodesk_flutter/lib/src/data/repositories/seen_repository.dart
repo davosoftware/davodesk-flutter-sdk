@@ -28,27 +28,31 @@ int unreadCount(List<TicketSummary> tickets, Map<String, String> seen) =>
 class SeenStore {
   SharedPreferencesAsync? _preferences;
   String? _key;
+  Future<void>? _loading;
   Map<String, String> _markers = const {};
 
   /// The markers loaded: ticket id to the time the customer last saw it.
   Map<String, String> get markers => _markers;
 
   /// Loads the markers of `subject` on `channelId`; a customer whose identity token
-  /// names no subject is `unknown`.
-  Future<void> load(String channelId, String? subject) async {
+  /// names no subject is `unknown`. Callers at the same time share one read.
+  Future<void> load(String channelId, String? subject) {
     final who = subject == null || subject.isEmpty ? 'unknown' : subject;
     final key = 'davodesk.seen.$channelId.$who';
-    if (key == _key) return;
+    if (key == _key) return _loading ?? Future.value();
     _key = key;
     _markers = const {};
+    return _loading = _read(key);
+  }
+
+  Future<void> _read(String key) async {
     final stored = await _guard(() async => _store()?.getString(key));
     if (stored == null || key != _key) return;
-    _markers = switch (_decode(stored)) {
-      final Map<String, Object?> map => {
+    _markers = {
+      if (_decode(stored) case final Map<String, Object?> map)
         for (final MapEntry(:key, :value) in map.entries)
           if (value is String) key: value,
-      },
-      _ => const {},
+      ..._markers,
     };
   }
 
@@ -66,6 +70,7 @@ class SeenStore {
   Future<void> clear() async {
     final key = _key;
     _key = null;
+    _loading = null;
     _markers = const {};
     if (key != null) await _guard(() async => _store()?.remove(key));
   }

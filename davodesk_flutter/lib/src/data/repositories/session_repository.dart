@@ -107,6 +107,8 @@ class DavoDeskSession {
   Timer? _timer;
   int _attempt = 0;
   String? _subject;
+  // Bumped on logout and dispose: an open still on its way then belongs to no one.
+  int _generation = 0;
 
   /// Where the session stands now.
   SessionState get state => _state;
@@ -132,21 +134,19 @@ class DavoDeskSession {
 
   /// Ends the session at the API and on the device.
   Future<void> logout() async {
+    _generation++;
+    _inFlight = null;
     _cancel();
-    if (_state case SessionReady(:final token)) {
-      try {
-        await _api.logout(token);
-      } on Object catch (error) {
-        _log.fine('Logout did not reach the API: $error');
-      }
-    }
+    final previous = _state;
     _attempt = 0;
     _subject = null;
     _set(const SessionIdle());
+    if (previous case SessionReady(:final token)) await _end(token);
   }
 
   /// Stops renewing and retrying.
   void dispose() {
+    _generation++;
     _cancel();
     _states.close();
   }
@@ -154,19 +154,29 @@ class DavoDeskSession {
   Future<SessionState> _open() {
     if (_inFlight case final open?) return open;
     _cancel();
-    return _inFlight = _attemptOpen().whenComplete(() => _inFlight = null);
+    late final Future<SessionState> open;
+    open = _attemptOpen(_generation).whenComplete(() {
+      if (identical(_inFlight, open)) _inFlight = null;
+    });
+    return _inFlight = open;
   }
 
-  Future<SessionState> _attemptOpen() async {
+  Future<SessionState> _attemptOpen(int generation) async {
     _set(const SessionOpening());
     try {
-      final identity = await _identityToken().catchError((Object _) => null);
+      final identity = await Future.sync(_identityToken)
+          .catchError((Object _) => null);
+      if (generation != _generation) return _state;
       if (identity == null || identity.isEmpty) throw _TokenFailed();
       _subject = _subjectOf(identity);
       final opened = await _api.openSession(
         channelId: _channelId,
         identityToken: identity,
       );
+      if (generation != _generation) {
+        unawaited(_end(opened.sessionToken));
+        return _state;
+      }
       _attempt = 0;
       final renewIn = opened.expiresIn - _renewEarly;
       _later(renewIn.isNegative ? Duration.zero : renewIn);
@@ -179,7 +189,16 @@ class DavoDeskSession {
         ),
       );
     } on Object catch (error) {
+      if (generation != _generation) return _state;
       return _refuse(error);
+    }
+  }
+
+  Future<void> _end(String token) async {
+    try {
+      await _api.logout(token);
+    } on Object catch (error) {
+      _log.fine('Logout did not reach the API: $error');
     }
   }
 
