@@ -8,6 +8,7 @@ import 'package:logging/logging.dart';
 
 import 'data/repositories/chat_repository.dart';
 import 'data/repositories/seen_repository.dart';
+import 'data/repositories/seen_repository.dart' as seen show isUnread;
 import 'data/repositories/session_repository.dart';
 import 'data/services/api_service.dart';
 import 'data/services/chat_socket.dart';
@@ -59,9 +60,14 @@ class DavoDeskClient {
       session: _session,
       socketFactory: socketFactory,
     );
-    _chatEvents = _chat.events.listen(
-      (event) => _conversation.value = reduce(_conversation.value, event),
-    );
+    _chatEvents = _chat.events.listen((event) {
+      _conversation.value = reduce(_conversation.value, event);
+      // An ended chat answers nothing more: the next message needs a new one. A closed
+      // ticket waits for the customer's Start a new conversation.
+      if (event case EndedEvent(reason: 'helped' || 'idle')) {
+        unawaited(_chat.restart());
+      }
+    });
     _lifecycle = AppLifecycleListener(
       binding: WidgetsFlutterBinding.ensureInitialized(),
       onResume: () => unawaited(resumed()),
@@ -99,6 +105,9 @@ class DavoDeskClient {
     SessionReady(:final name) => name,
     _ => null,
   };
+
+  /// Every change in the customer's session, such as a refused identity token.
+  Stream<SessionState> get sessionChanges => _session.states;
 
   /// The channel's public settings, read once.
   Future<ChannelConfig> config() => _config ??= _readConfig();
@@ -145,6 +154,9 @@ class DavoDeskClient {
     if (ticket.updatedAt case final at?) await _seen.mark(ticket.id, at);
     _recount();
   }
+
+  /// Whether [ticket] changed since the customer last looked, as [unread] counts it.
+  bool isUnread(TicketSummary ticket) => seen.isUnread(ticket, _seen.markers);
 
   /// Sends the customer's message in the conversation.
   Future<ChatAck> send(String text) => _chat.send(text);

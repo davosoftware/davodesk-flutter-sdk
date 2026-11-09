@@ -1,0 +1,336 @@
+import 'package:material_ui/material_ui.dart';
+
+import '../../core/scope.dart';
+import '../../theme.dart';
+import '../../widgets/page_bar.dart';
+import '../../words.dart';
+import 'email_view_model.dart';
+
+/// Email Support: raises a ticket without chat; the reply comes to Messages and by
+/// email.
+class EmailPage extends StatefulWidget {
+  /// Creates the form.
+  const EmailPage({super.key});
+
+  @override
+  State<EmailPage> createState() => _EmailPageState();
+}
+
+class _EmailPageState extends State<EmailPage> {
+  final _subject = TextEditingController();
+  final _extra = TextEditingController();
+  final _message = TextEditingController();
+  EmailViewModel? _model;
+
+  @override
+  void initState() {
+    super.initState();
+    for (final field in [_subject, _message]) {
+      field.addListener(() => setState(() {}));
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _model ??= EmailViewModel(SupportScope.of(context).client);
+  }
+
+  @override
+  void dispose() {
+    _subject.dispose();
+    _extra.dispose();
+    _message.dispose();
+    _model?.dispose();
+    super.dispose();
+  }
+
+  Future<void> _send() async {
+    final scope = SupportScope.of(context);
+    final raised = await _model!.send(
+      subject: _subject.text,
+      message: _message.text,
+      extraLabel: scope.emailForm?.extraField?.label,
+      extraValue: _extra.text,
+    );
+    if (raised != null && mounted) {
+      scope.onRaised?.call(raised);
+      scope.go(context, TicketPlace(raised.ticket.id));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scope = SupportScope.of(context);
+    final colors = SupportColors.of(context);
+    final model = _model!;
+    final form = scope.emailForm;
+    final note = form?.note;
+    final extra = form?.extraField;
+    return Scaffold(
+      backgroundColor: colors.paper,
+      body: SafeArea(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 640),
+            child: Column(
+              children: [
+                PageBar(
+                  title: 'Email Support',
+                  centered: true,
+                  onBack: () => Navigator.maybePop(context),
+                ),
+                Expanded(
+                  child: ListenableBuilder(
+                    listenable: model,
+                    builder: (context, _) {
+                      final ready =
+                          _subject.text.trim().isNotEmpty &&
+                          _message.text.trim().isNotEmpty &&
+                          !model.sending;
+                      return ListView(
+                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+                        children: [
+                          Text(
+                            'Email Us',
+                            style: TextStyle(
+                              color: colors.ink,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Have a question about your order or our services? '
+                            'Our team is here to help.',
+                            style: TextStyle(
+                              color: colors.ink2,
+                              fontSize: 13.5,
+                            ),
+                          ),
+                          if (note != null && note.trim().isNotEmpty) ...[
+                            const SizedBox(height: 14),
+                            _Note(text: note),
+                          ],
+                          if (model.raised case final raised?) ...[
+                            const SizedBox(height: 14),
+                            _Banner(
+                              text: raised.resumed
+                                  ? 'Added to your open request '
+                                        '${referenceOf(raised.ticket.id)}'
+                                  : 'Sent. We’ll reply here and by email.',
+                              color: colors.ok,
+                              background: colors.okSoft,
+                            ),
+                          ],
+                          if (model.failed) ...[
+                            const SizedBox(height: 14),
+                            _Banner(
+                              text: 'Something went wrong here.',
+                              color: colors.warn,
+                              background: colors.warnSoft,
+                            ),
+                          ],
+                          const SizedBox(height: 16),
+                          const _Label('Subject'),
+                          _Field(
+                            key: const Key('subject'),
+                            controller: _subject,
+                            hint: 'What can we help you with?',
+                          ),
+                          if (extra != null) ...[
+                            const SizedBox(height: 12),
+                            _Label(extra.label, optional: true),
+                            _Field(
+                              key: const Key('extra'),
+                              controller: _extra,
+                              hint: extra.hint,
+                            ),
+                          ],
+                          const SizedBox(height: 12),
+                          const _Label('Message'),
+                          _Field(
+                            key: const Key('message'),
+                            controller: _message,
+                            hint: 'Tell us more about your inquiry…',
+                            lines: 4,
+                          ),
+                          const SizedBox(height: 16),
+                          FilledButton(
+                            onPressed: ready ? _send : null,
+                            style: FilledButton.styleFrom(
+                              minimumSize: const Size.fromHeight(48),
+                            ),
+                            child: const Text('Send Email'),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _Label extends StatelessWidget {
+  const _Label(this.text, {this.optional = false});
+
+  final String text;
+  final bool optional;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = SupportColors.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(
+                color: colors.ink,
+                fontSize: 12.5,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          if (optional)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: colors.rule.withValues(alpha: 0.6),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(
+                'OPTIONAL',
+                style: TextStyle(
+                  color: colors.ink2,
+                  fontSize: 9.5,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.6,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Field extends StatelessWidget {
+  const _Field({
+    super.key,
+    required this.controller,
+    this.hint,
+    this.lines = 1,
+  });
+
+  final TextEditingController controller;
+  final String? hint;
+  final int lines;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = SupportColors.of(context);
+    return TextField(
+      controller: controller,
+      minLines: lines,
+      maxLines: lines == 1 ? 1 : 8,
+      textCapitalization: TextCapitalization.sentences,
+      style: TextStyle(color: colors.ink, fontSize: 14),
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: TextStyle(color: colors.ink3, fontSize: 13.5),
+        filled: true,
+        fillColor: colors.shelf,
+        isDense: true,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 12,
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide.none,
+        ),
+      ),
+    );
+  }
+}
+
+class _Note extends StatelessWidget {
+  const _Note({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = SupportColors.of(context);
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: colors.accentSoft,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: colors.accent.withValues(alpha: 0.25)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        spacing: 10,
+        children: [
+          Container(
+            width: 30,
+            height: 30,
+            decoration: BoxDecoration(
+              color: colors.accent,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(Icons.bolt_rounded, size: 18, color: colors.onAccent),
+          ),
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(color: colors.ink2, fontSize: 12.5, height: 1.4),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Banner extends StatelessWidget {
+  const _Banner({
+    required this.text,
+    required this.color,
+    required this.background,
+  });
+
+  final String text;
+  final Color color;
+  final Color background;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    liveRegion: true,
+    child: Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          color: color,
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    ),
+  );
+}

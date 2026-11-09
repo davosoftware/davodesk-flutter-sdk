@@ -2,6 +2,10 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:davodesk_flutter/davodesk_flutter.dart';
+import 'package:davodesk_flutter/src/data/repositories/chat_repository.dart';
+import 'package:davodesk_flutter/src/data/repositories/session_repository.dart';
+import 'package:davodesk_flutter/src/data/services/api_service.dart';
+import 'package:davodesk_flutter/src/domain/chat_events.dart';
 import 'package:fake_async/fake_async.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;

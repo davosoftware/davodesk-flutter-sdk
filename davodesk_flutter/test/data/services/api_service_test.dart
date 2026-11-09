@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:davodesk_flutter/davodesk_flutter.dart';
+import 'package:davodesk_flutter/src/data/services/api_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
