@@ -106,6 +106,34 @@ void main() {
     },
   );
 
+  testWidgets('"{name} joined" sits just before their first message', (
+    tester,
+  ) async {
+    final (page, socket) = await open(
+      tester,
+      first: snapshot(
+        status: 'live',
+        ticketId: '6a0000000000009bbc55',
+        messages: [
+          me('m1', 'My refund hasn’t come back'),
+          bot('m2', 'I’ll pass you to the team.'),
+          {
+            'id': 'm3',
+            'sender_type': 'staff',
+            'sender_display_name': 'Mara',
+            'content': 'It’s back on your card now.',
+          },
+        ],
+      ),
+    );
+    socket.trigger('human_joined', {'display_name': 'Mara'});
+    await tester.pumpAndSettle();
+    double top(String text) => tester.getTopLeft(find.text(text)).dy;
+    expect(top('I’ll pass you to the team.'), lessThan(top('Mara joined')));
+    expect(top('Mara joined'), lessThan(top('It’s back on your card now.')));
+    await page.finish(tester);
+  });
+
   testWidgets('a person with no name shows as the brand\'s team', (
     tester,
   ) async {
