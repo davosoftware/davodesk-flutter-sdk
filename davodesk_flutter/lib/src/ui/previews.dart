@@ -4,10 +4,13 @@ library;
 import 'package:flutter/widget_previews.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../client.dart';
 import '../domain/models.dart';
+import 'core/scope.dart';
 import 'core/support_shell.dart';
 import 'features/conversation/conversation_page.dart';
 import 'features/conversation/conversation_view_model.dart';
+import 'features/email/email_page.dart';
 import 'features/help/help_page.dart';
 import 'features/home/home_page.dart';
 import 'features/home/home_view_model.dart';
@@ -266,6 +269,31 @@ Widget _help(Brightness brightness) => _screen(
     ),
   ),
 );
+
+Widget _email(Brightness brightness) => SupportScope(
+  // An idle client: the form calls nothing until Send.
+  client: DavoDeskClient(channelId: 'preview', identityToken: () async => null),
+  config: const ChannelConfig(
+    channelId: 'preview',
+    type: 'app',
+    brandName: 'Davopay',
+    supportMode: 'ai_triage',
+  ),
+  go: (_, _) {},
+  emailForm: const DavoDeskEmailForm(
+    note: 'We typically respond to all email inquiries within 24 hours.',
+    extraField: DavoDeskFormField(label: 'Order ID', hint: 'e.g. #VP-8291'),
+  ),
+  child: _screen(brightness, const EmailPage()),
+);
+
+/// Email Support, light.
+@Preview(group: 'Email', name: 'Light')
+Widget emailLight() => _email(Brightness.light);
+
+/// Email Support, dark.
+@Preview(group: 'Email', name: 'Dark')
+Widget emailDark() => _email(Brightness.dark);
 
 /// A ticket asking for a rating, light.
 @Preview(group: 'Ticket', name: 'Light')

@@ -77,6 +77,15 @@ class FakeApi {
   /// The tickets one read returns, by id.
   Map<String, Map<String, Object?>> ticketsById = {};
 
+  /// The ticket a raise answers with.
+  String raisedTicketId = 't9';
+
+  /// Whether a raise adds to an open ticket.
+  bool raiseResumes = false;
+
+  /// The status the next raise is refused with.
+  int? refuseNextRaise;
+
   /// Every raise: its body and its idempotency key.
   final raised = <({Map<String, Object?> body, String? key})>[];
 
@@ -174,7 +183,14 @@ class FakeApi {
           dropNextRaise = false;
           throw http.ClientException('Connection closed before the answer');
         }
-        return json({'resumed': false, 'ticket': ticketJson('t9')});
+        if (refuseNextRaise case final status?) {
+          refuseNextRaise = null;
+          return json({'code': 'VALIDATION_FAILED', 'message': 'No'}, status);
+        }
+        return json({
+          'resumed': raiseResumes,
+          'ticket': ticketJson(raisedTicketId),
+        });
       case ('POST', final p) when p.startsWith('/v1/attachments/tickets/'):
         attached.add((
           ticketId: p.split('/').last,
