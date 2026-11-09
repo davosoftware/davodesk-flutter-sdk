@@ -54,6 +54,7 @@ class _EmailPageState extends State<EmailPage> {
       extraValue: _extra.text,
     );
     if (raised != null && mounted) {
+      scope.onRaised?.call(raised);
       scope.go(context, TicketPlace(raised.ticket.id));
     }
   }

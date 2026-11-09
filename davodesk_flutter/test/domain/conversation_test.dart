@@ -1,4 +1,5 @@
 import 'package:davodesk_flutter/davodesk_flutter.dart';
+import 'package:davodesk_flutter/src/domain/chat_events.dart';
 import 'package:davodesk_flutter/src/domain/conversation.dart' show reduce;
 import 'package:flutter_test/flutter_test.dart';
 

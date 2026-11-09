@@ -79,6 +79,7 @@ class SupportScope extends InheritedWidget {
     Future<bool> Function(Uri url)? openLink,
     Future<UploadFile?> Function(AttachFrom from)? pickAttachment,
     this.emailForm,
+    this.onRaised,
     required super.child,
   }) : openLink = openLink ?? _launch,
        pickAttachment = pickAttachment ?? _pick;
@@ -100,6 +101,9 @@ class SupportScope extends InheritedWidget {
 
   /// The email form's words that belong to the app.
   final DavoDeskEmailForm? emailForm;
+
+  /// Hears of each ticket the email form raises.
+  final void Function(RaisedTicket raised)? onRaised;
 
   /// The scope around [context].
   static SupportScope of(BuildContext context) {

@@ -74,6 +74,23 @@ void main() {
     },
   );
 
+  test('tells how the session stands, for the app\'s error events', () async {
+    final (:client, api: _, sockets: _, identities: _) = arrange(token: '');
+    final states = <SessionState>[];
+    final changes = client.sessionChanges.listen(states.add);
+    await expectLater(
+      client.refreshTickets(),
+      throwsA(isA<DavoDeskUnavailable>()),
+    );
+    await pumpEventQueue();
+    expect(
+      states.last,
+      isA<SessionUnavailable>().having((s) => s.code, 'code', 'TOKEN_FAILED'),
+    );
+    await changes.cancel();
+    client.dispose();
+  });
+
   test('an answers-only brand opens no socket and reads no tickets', () async {
     final (:client, :api, :sockets, identities: _) = arrange();
     api.supportMode = 'assistant_only';

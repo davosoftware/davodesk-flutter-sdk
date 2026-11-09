@@ -106,6 +106,9 @@ class DavoDeskClient {
     _ => null,
   };
 
+  /// Every change in the customer's session, such as a refused identity token.
+  Stream<SessionState> get sessionChanges => _session.states;
+
   /// The channel's public settings, read once.
   Future<ChannelConfig> config() => _config ??= _readConfig();
 
