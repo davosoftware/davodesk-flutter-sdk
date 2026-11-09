@@ -4,4 +4,5 @@ library;
 
 export 'src/data/services/api_service.dart'
     show DavoDeskApi, DavoDeskApiError, UploadFile;
+export 'src/data/repositories/session_repository.dart';
 export 'src/domain/models.dart';
