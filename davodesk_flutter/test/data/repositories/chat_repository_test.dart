@@ -7,60 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 
-/// A socket.io stand-in: tests play the server with [trigger] and read [sent].
-class FakeSocket implements ChatSocket {
-  FakeSocket(this.url, String token) : auth = {'token': token};
-
-  final Uri url;
-
-  @override
-  Map<String, Object?> auth;
-
-  @override
-  bool active = true;
-
-  int connects = 0;
-  int disconnects = 0;
-
-  /// Each call as `[event, payload]`.
-  final sent = <List<Object?>>[];
-
-  /// What the server answers to an event; `{ok: true}` otherwise.
-  final answers = <String, Object?>{};
-
-  final _handlers = <String, List<void Function(Object? data)>>{};
-
-  @override
-  void on(String event, void Function(Object? data) handler) =>
-      (_handlers[event] ??= []).add(handler);
-
-  @override
-  void connect() => connects++;
-
-  @override
-  void disconnect() {
-    disconnects++;
-    active = false;
-  }
-
-  @override
-  Future<Object?> emitWithAck(String event, Object? payload) async {
-    sent.add([event, payload]);
-    return answers[event] ?? {'ok': true};
-  }
-
-  void trigger(String event, [Object? data]) {
-    for (final handler in [...?_handlers[event]]) {
-      handler(data);
-    }
-  }
-}
-
-String identity(String sub) {
-  String part(Object json) =>
-      base64Url.encode(utf8.encode(jsonEncode(json))).replaceAll('=', '');
-  return '${part({'alg': 'HS256'})}.${part({'sub': sub})}.sig';
-}
+import '../../support/fakes.dart';
 
 const snapshot = {
   'id': 'cs1',

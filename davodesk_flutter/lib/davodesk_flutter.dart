@@ -2,6 +2,7 @@
 /// live chat with the support team. See the README.
 library;
 
+export 'src/client.dart';
 export 'src/data/repositories/chat_repository.dart';
 export 'src/data/repositories/session_repository.dart';
 export 'src/data/services/api_service.dart'
