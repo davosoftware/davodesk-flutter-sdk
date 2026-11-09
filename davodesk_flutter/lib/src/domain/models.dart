@@ -391,6 +391,29 @@ class const ArticlePage(final int total, final List<PublicArticle> articles) {
   this;
 }
 
+/// The server's answer to a chat call: whether it took it, and whether the team now has
+/// the conversation as [ticketId].
+class const ChatAck({
+  required final bool ok,
+  final bool handedOff = false,
+  final String? ticketId,
+  final String? error,
+}) {
+  /// Creates a [ChatAck].
+  this;
+
+  /// Reads an answer; anything but a map is a refusal.
+  factory fromJson(Object? json) => switch (json) {
+    final Map<String, Object?> map => ChatAck(
+      ok: _bool(map['ok']),
+      handedOff: _bool(map['handed_off']),
+      ticketId: _string(map['ticket_id']),
+      error: _string(map['error']),
+    ),
+    _ => const ChatAck(ok: false),
+  };
+}
+
 /// What the chat socket sends on connecting: the conversation so far.
 class const SessionSnapshot({
   required final String id,
