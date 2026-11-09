@@ -83,6 +83,30 @@ class FakeApi {
   /// Every upload: the ticket and its files' names.
   final attached = <({String ticketId, List<String> names})>[];
 
+  /// The help centre's collections.
+  List<Map<String, Object?>> categories = [];
+
+  /// What a search finds.
+  List<Map<String, Object?>> hits = [];
+
+  /// Each collection's articles, by its id.
+  Map<String, List<Map<String, Object?>>> collectionArticles = {};
+
+  /// Published articles, by id.
+  Map<String, Map<String, Object?>> articlesById = {};
+
+  /// Every search, and every vote as (article, helpful).
+  final searches = <String>[];
+
+  /// Every vote as (article, helpful).
+  final votes = <(String, bool)>[];
+
+  /// Every rating: the ticket and the body.
+  final rated = <(String, Map<String, Object?>)>[];
+
+  /// Every reopened ticket.
+  final reopened = <String>[];
+
   /// The client the SDK talks through.
   late final http.Client httpClient = MockClient(_answer);
 
@@ -117,6 +141,25 @@ class FakeApi {
           return json({'code': 'UNAUTHORIZED', 'message': 'No'}, status);
         }
         return json({'tickets': tickets});
+      case ('POST', final p) when p.endsWith('/satisfaction'):
+        final id = p.split('/')[4];
+        final body = jsonDecode(request.body) as Map<String, Object?>;
+        rated.add((id, body));
+        return json({
+          ...?ticketsById[id],
+          'satisfaction': {
+            'requested_at': '2026-11-05T10:00:00.000Z',
+            'rating': body['rating'],
+          },
+        });
+      case ('POST', final p) when p.endsWith('/reopen'):
+        final id = p.split('/')[4];
+        reopened.add(id);
+        return json({
+          ...?ticketsById[id],
+          'status': 'open',
+          'reopenable': false,
+        });
       case ('GET', final p) when p.startsWith('/v1/tickets/me/'):
         final ticket = ticketsById[p.split('/').last];
         return ticket == null
@@ -143,6 +186,26 @@ class FakeApi {
           ],
         ));
         return json({'attachments': <Object?>[]}, 201);
+      case ('GET', '/v1/kb/public/app_1/categories'):
+        return json({'categories': categories});
+      case ('GET', '/v1/kb/public/app_1/search'):
+        searches.add(request.url.queryParameters['q'] ?? '');
+        return json({'articles': hits});
+      case ('PUT', final p) when p.endsWith('/feedback'):
+        final body = jsonDecode(request.body) as Map<String, Object?>;
+        votes.add((p.split('/')[4], body['helpful'] == true));
+        return json({'ok': true});
+      case ('GET', '/v1/kb/public/app_1')
+          when request.url.queryParameters['category_id'] != null:
+        final list =
+            collectionArticles[request.url.queryParameters['category_id']] ??
+            [];
+        return json({'total': list.length, 'articles': list});
+      case ('GET', final p) when p.startsWith('/v1/kb/public/app_1/'):
+        final article = articlesById[p.split('/').last];
+        return article == null
+            ? json({'message': 'Not found'}, 404)
+            : json(article);
       case ('GET', '/v1/kb/public/app_1'):
         articleReads++;
         return json({'total': articleTotal, 'articles': <Object?>[]});

@@ -8,13 +8,17 @@ import '../domain/models.dart';
 import 'core/support_shell.dart';
 import 'features/conversation/conversation_page.dart';
 import 'features/conversation/conversation_view_model.dart';
+import 'features/help/help_page.dart';
 import 'features/home/home_page.dart';
 import 'features/home/home_view_model.dart';
 import 'features/messages/messages_page.dart';
 import 'features/messages/messages_view_model.dart';
+import 'features/ticket/ticket_page.dart';
+import 'features/ticket/ticket_view_model.dart';
 import 'theme.dart';
 import 'widgets/brand_tile.dart';
 import 'widgets/header_logo.dart';
+import 'widgets/page_bar.dart';
 import 'widgets/powered_by.dart';
 import 'widgets/recover.dart';
 import 'widgets/state_chip.dart';
@@ -210,6 +214,74 @@ Widget conversationDark() => _conversationView(Brightness.dark, _joined);
 /// The FAQ's choices, with the notice.
 @Preview(group: 'Conversation', name: 'Choices')
 Widget conversationChoices() => _conversationView(Brightness.light, _choosing);
+
+const _ticket = TicketState(
+  subject: 'Virtual card refund',
+  status: 'resolved',
+  reference: '#9BBC55',
+  askRating: true,
+  reopenable: true,
+  loading: false,
+  items: [
+    BubbleItem(id: 'm1', text: 'Where is my refund?', mine: true),
+    BubbleItem(id: 'm2', text: 'It is back on your card now.', label: 'Mara'),
+  ],
+);
+
+Widget _ticketView(Brightness brightness) => _screen(
+  brightness,
+  TicketView(
+    state: _ticket,
+    onRate: (_, _) async {},
+    onReopen: () {},
+    onContinue: () {},
+    onStartNew: () {},
+    onOpenFile: (_) {},
+    onRetry: () {},
+    onBack: () {},
+  ),
+);
+
+Widget _help(Brightness brightness) => _screen(
+  brightness,
+  Builder(
+    builder: (context) => Scaffold(
+      backgroundColor: SupportColors.of(context).paper,
+      body: Column(
+        children: [
+          PageBar(title: 'Help', centered: true, onBack: () {}),
+          HelpRow(
+            title: 'Virtual cards',
+            line: 'Creating, funding and refunds',
+            icon: Icons.folder_outlined,
+            onTap: () {},
+          ),
+          HelpRow(
+            title: 'Withdrawals to a bank account',
+            icon: Icons.folder_outlined,
+            onTap: () {},
+          ),
+        ],
+      ),
+    ),
+  ),
+);
+
+/// A ticket asking for a rating, light.
+@Preview(group: 'Ticket', name: 'Light')
+Widget ticketLight() => _ticketView(Brightness.light);
+
+/// A ticket asking for a rating, dark.
+@Preview(group: 'Ticket', name: 'Dark')
+Widget ticketDark() => _ticketView(Brightness.dark);
+
+/// Help's collections, light.
+@Preview(group: 'Help', name: 'Light')
+Widget helpLight() => _help(Brightness.light);
+
+/// Help's collections, dark.
+@Preview(group: 'Help', name: 'Dark')
+Widget helpDark() => _help(Brightness.dark);
 
 /// Home, light.
 @Preview(group: 'Home', name: 'Light')

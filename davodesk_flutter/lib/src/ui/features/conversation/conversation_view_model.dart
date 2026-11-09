@@ -139,7 +139,7 @@ class ConversationViewModel extends ChangeNotifier {
       items: [
         for (final (index, message) in chat.messages.indexed) ...[
           if (index == joinedAt) JoinedItem(person!),
-          _bubbleOf(message, brand: brand, ai: ai),
+          bubbleOf(message, brand: brand, ai: ai),
         ],
         if (joinedAt == chat.messages.length) JoinedItem(person!),
       ],
@@ -161,29 +161,6 @@ class ConversationViewModel extends ChangeNotifier {
       failed: _failed,
     );
   }
-
-  static BubbleItem _bubbleOf(
-    ChatMessage message, {
-    required String brand,
-    required String ai,
-  }) => BubbleItem(
-    id: message.id,
-    text: message.content,
-    mine: message.senderType == SenderType.endUser,
-    label: switch (message.senderType) {
-      .endUser => null,
-      .bot => ai,
-      _ => speakerName(
-        message.senderType,
-        message.senderDisplayName,
-        brand: brand,
-        aiName: ai,
-      ),
-    },
-    ai: message.senderType == SenderType.bot,
-    sources: [for (final source in message.botSources) source.title],
-    files: message.attachments,
-  );
 
   /// Opens the chat, or a new one when asked to.
   Future<void> load() async {
@@ -247,3 +224,27 @@ class ConversationViewModel extends ChangeNotifier {
     super.dispose();
   }
 }
+
+/// A message as a bubble: the AI's under its name, a person's under theirs.
+BubbleItem bubbleOf(
+  ChatMessage message, {
+  required String brand,
+  required String ai,
+}) => BubbleItem(
+  id: message.id,
+  text: message.content,
+  mine: message.senderType == SenderType.endUser,
+  label: switch (message.senderType) {
+    .endUser => null,
+    .bot => ai,
+    _ => speakerName(
+      message.senderType,
+      message.senderDisplayName,
+      brand: brand,
+      aiName: ai,
+    ),
+  },
+  ai: message.senderType == SenderType.bot,
+  sources: [for (final source in message.botSources) source.title],
+  files: message.attachments,
+);

@@ -39,6 +39,19 @@ final class const ConversationPlace({final bool fresh = false})
   this;
 }
 
+/// A help-centre collection's articles.
+final class const CollectionPlace(final String id, final String name)
+    extends SupportPlace {
+  /// Creates the place.
+  this;
+}
+
+/// One help article.
+final class const ArticlePlace(final String id) extends SupportPlace {
+  /// Creates the place.
+  this;
+}
+
 /// One of the customer's tickets.
 final class const TicketPlace(final String id) extends SupportPlace {
   /// Creates the place.
