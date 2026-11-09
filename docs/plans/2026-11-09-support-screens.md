@@ -6,7 +6,7 @@
 
 **Architecture:** the screens sit in `lib/src/ui/`. Each page reads one `DavoDeskClient` (plan `2026-11-09-host-api-and-client.md`) through a `SupportScope` InheritedWidget, with the colours resolved from the channel's config and the app's brightness. `DavoDesk` is a static facade that owns the client and pushes full-screen routes on the app's navigator.
 
-**Tech Stack:** Flutter 3.47 / Dart 3.13, Material widgets drawn in our own style, `file_picker`, `url_launcher`, and `flutter_test` widget tests.
+**Tech Stack:** Flutter 3.47 / Dart 3.13 (the floor), `material_ui` (not `package:flutter/material.dart`), `image_picker` and `file_selector` (not `file_picker`), `url_launcher`, `logging`, `flutter_test` widget tests, and Widget Previewer previews.
 
 **Spec:** `docs/specs/2026-11-09-flutter-sdk-design.md` (§3, §4, §8, §9; approved 2026-11-09). The mockup it approves is `docs/specs/2026-11-09-flutter-sdk-screens.html`.
 
@@ -46,6 +46,30 @@
   - an image that fails to load falls back to its text, never a broken icon;
   - the Powered by mark is a bundled asset, `assets/davodesk_logo.png`, copied from the widget repo.
 - **Presentation:** full-screen routes on the app's navigator; the system back goes one page back.
+- **Current Flutter practice** (`docs/research/2026-11-09-flutter-docs-notes.md`, read 2026-11-09 at the owner's request). Everything in the plan client's Global Constraints applies here too.
+  - **`material_ui`:**
+    - Every Material import is `package:material_ui/material_ui.dart`, with `material_ui: ^1.10.0`; never `package:flutter/material.dart`.
+    - No Material type appears in the public API.
+    - The SDK wraps each of its pages in its own `Theme` (`ColorScheme.fromSeed(seedColor: accent, brightness: …)`) and `Localizations` (the default Material and Widgets localizations), so it works inside an app on either Material.
+  - **Theme (ruling on spec §4, "light or dark following the app; the app's own fonts"):**
+    - `DavoDeskTheme` is `({Color? accent, Brightness? brightness, String? fontFamily})`.
+    - An app on `material_ui` lends its theme's brightness and font.
+    - An app on the framework's Material can't be read (different types), so the SDK follows the phone's setting (`MediaQuery.platformBrightnessOf`) and the platform font, unless `DavoDeskTheme` says otherwise.
+  - **Plugins:**
+    - photos through `image_picker`, PDFs through `file_selector`, links through `url_launcher` (`LaunchMode.externalApplication`);
+    - all published by flutter.dev and Swift Package Manager ready (SPM has been the default since 3.44, and the CocoaPods registry goes read-only on 2 December 2026).
+  - **Insets and back:**
+    - Pages draw edge-to-edge and handle the system bars' insets (`SafeArea`, `MediaQuery.paddingOf`, `viewInsets` for the keyboard).
+    - Back works through the default routes (predictive back on Android); any interception uses `PopScope` with `onPopInvokedWithResult`, never `WillPopScope`.
+  - **Accessibility and widgets:**
+    - page titles carry `Semantics(headingLevel: 1)` (`header: true` does nothing since 3.47);
+    - colours use `withValues(alpha:)`, never `withOpacity`;
+    - component themes use the `*ThemeData` classes;
+    - Good/Bad is a `SegmentedButton`, not `Radio`;
+    - there are no SnackBars with actions.
+  - **Layout:** lists use `ListView.builder`; content is at most 640 px wide on large windows; no orientation lock.
+  - **Structure:** each screen is a view model (`ChangeNotifier`) plus a view (`ListenableBuilder`) under `lib/src/ui/features/<screen>/`; the shared pieces live under `lib/src/ui/core/`.
+  - **Previews:** each screen gets `@Preview` functions in light and dark (`package:flutter/widget_previews.dart`), fed by fixture view models. They use no `dart:io`, and package asset paths (`packages/davodesk_flutter/assets/...`).
 - **Commits** as Hyacinth-Chidi, with no Co-Authored-By trailer. Worktree `../worktrees/davodesk-flutter-screens`, branch `feat/screens`. Merge with `--no-ff`; never push.
 - **No writes to the development database** (Task 7's emulator run) without the owner's OK.
 
@@ -63,7 +87,8 @@
 
 **Files:**
 - Create:
-  - `lib/src/ui/theme.dart`: `class DavoDeskTheme { final Color? accent; }` and `class SupportColors` (resolved from config, theme and brightness);
+  - `lib/src/ui/theme.dart`: `class DavoDeskTheme({Color? accent, Brightness? brightness, String? fontFamily})` and `class SupportColors` (resolved from config, `DavoDeskTheme`, an app `material_ui` theme when there is one, and the phone's brightness);
+  - `lib/src/ui/core/support_shell.dart`: `SupportShell`, which wraps every SDK page in its own `material_ui` `Theme` and `Localizations`;
   - `lib/src/ui/scope.dart`: `SupportScope` (client, config, colours, email form);
   - `lib/src/ui/widgets/brand_tile.dart`: the square logo or the initial;
   - `lib/src/ui/widgets/header_logo.dart`: the wordmark or the name;
@@ -81,9 +106,11 @@
   - `BrandTile` shows the initial when the image errors;
   - `HeaderLogo` shows the name without a URL;
   - `StateChip` labels the six ticket states as the web's `ticket-state.ts`;
-  - the accent override beats the channel's.
+  - the accent override beats the channel's;
+  - `DavoDeskTheme(brightness: .dark)` beats the phone's setting, and without it the SDK follows `platformBrightness`;
+  - **inside a framework-Material host** (`package:flutter/material.dart`'s `MaterialApp`), an SDK page with a `TextField` renders and takes text: the shell supplies its own Material localizations and theme.
 - [ ] **Step 2: Run** `flutter test test/ui/pieces_test.dart`. Expected: FAIL.
-- [ ] **Step 3: Implement.**
+- [ ] **Step 3: Implement**, and add the screen's `@Preview` functions (light and dark) in `lib/src/ui/previews.dart`, fed by fixture view models.
 - [ ] **Step 4: Run.** Expected: PASS. **Commit** `feat(sdk): the look and the shared pieces`.
 
 ### Task 2: Home and Messages
@@ -108,7 +135,7 @@
     - the pencil opens a new conversation;
     - opening a ticket marks it seen.
 - [ ] **Step 2: Run.** Expected: FAIL.
-- [ ] **Step 3: Implement.**
+- [ ] **Step 3: Implement**, and add the screen's `@Preview` functions (light and dark) in `lib/src/ui/previews.dart`, fed by fixture view models.
 - [ ] **Step 4: Run.** Expected: PASS. **Commit** `feat(sdk): Home and Messages`.
 
 ### Task 3: The conversation
@@ -117,7 +144,7 @@
 - Create:
   - `lib/src/ui/conversation_page.dart`;
   - `lib/src/ui/widgets/message_bubble.dart`: the customer's, the AI's with its label and source chips, and a person's;
-  - `lib/src/ui/widgets/composer.dart`: the text box, attach (`file_picker`, checked against the API's types and 10 MB before upload), emoji (focuses the system keyboard's emoji), and send.
+  - `lib/src/ui/widgets/composer.dart`: the text box; attach, which offers "Photo" (`image_picker`, gallery) or "File" (`file_selector`, PDF), checked against the API's types and 10 MB before upload; emoji, which focuses the system keyboard's emoji; and send.
 - Test: `test/ui/conversation_page_test.dart`.
 
 - [ ] **Step 1: Write the failing tests:**
@@ -130,7 +157,7 @@
   - a message arriving twice shows once;
   - nothing overflows at 200 % text.
 - [ ] **Step 2: Run.** Expected: FAIL.
-- [ ] **Step 3: Implement.**
+- [ ] **Step 3: Implement**, and add the screen's `@Preview` functions (light and dark) in `lib/src/ui/previews.dart`, fed by fixture view models.
 - [ ] **Step 4: Run.** Expected: PASS. **Commit** `feat(sdk): the conversation`.
 
 ### Task 4: A ticket and Help
@@ -143,7 +170,7 @@
   - **A ticket:**
     - the state chip;
     - its messages, with names;
-    - the rating only when asked: Good or Bad, an optional comment, then Send calls `rate`;
+    - the rating only when asked: Good or Bad as a `SegmentedButton`, an optional comment, then Send calls `rate`;
     - Reopen it only when `reopenable`;
     - a closed ticket shows the closed bar;
     - a merged ticket opens the ticket it was merged into.
@@ -152,7 +179,7 @@
     - collections list their articles;
     - an article shows "Was this helpful?", and a vote calls `vote`.
 - [ ] **Step 2: Run.** Expected: FAIL.
-- [ ] **Step 3: Implement.**
+- [ ] **Step 3: Implement**, and add the screen's `@Preview` functions (light and dark) in `lib/src/ui/previews.dart`, fed by fixture view models.
 - [ ] **Step 4: Run.** Expected: PASS. **Commit** `feat(sdk): a ticket and Help`.
 
 ### Task 5: Email Support
@@ -171,7 +198,7 @@
   - a double tap sends once;
   - a refusal shows in place and keeps the text.
 - [ ] **Step 2: Run.** Expected: FAIL.
-- [ ] **Step 3: Implement.**
+- [ ] **Step 3: Implement**, and add the screen's `@Preview` functions (light and dark) in `lib/src/ui/previews.dart`, fed by fixture view models.
 - [ ] **Step 4: Run.** Expected: PASS. **Commit** `feat(sdk): Email Support`.
 
 ### Task 6: The `DavoDesk` calls
@@ -220,6 +247,7 @@
     - Sign out;
   - `example_app/pubspec.yaml`: `http`, `shared_preferences`;
   - `example_app/android/app/src/debug/AndroidManifest.xml`: `android:usesCleartextTraffic="true"`, for debug only;
+  - the app imports `package:material_ui/material_ui.dart`, and the main manifest's `<application>` sets `android:enableOnBackInvokedCallback="true"` (predictive back);
   - the main manifest: `INTERNET`, and the `https` `<queries>` entry `url_launcher` needs.
 - Test: `example_app/test/widget_test.dart` (sign in → Acme home, with a fake host API).
 

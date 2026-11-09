@@ -16,7 +16,7 @@
 Socket.IO sits behind a small `ChatSocket` interface, so tests use a fake. `DavoDeskClient` puts them together for the screens and for apps that draw their own.
 
 **Tech Stack:**
-- the SDK: Dart 3.13 and Flutter 3.47, with `http`, `socket_io_client` (Socket.IO v4) and `shared_preferences`, and `fake_async` for tests;
+- the SDK: Dart 3.13 and Flutter 3.47 (the floor; see Global Constraints), with `http`, `socket_io_client` (Socket.IO v4), `shared_preferences` and `logging`, and `fake_async` for tests;
 - host_api: `shelf`, `shelf_router` and `crypto`.
 
 **Spec:** `docs/specs/2026-11-09-flutter-sdk-design.md` (§3, §6, §7; approved 2026-11-09).
@@ -47,6 +47,26 @@ Socket.IO sits behind a small `ChatSocket` interface, so tests use a fake. `Davo
   - the port is 8787 by default, on all interfaces;
   - it never prints the secret or a token.
 - **No state-management package.** Use `ValueNotifier`, `ChangeNotifier` and `Stream`.
+- **Current Flutter practice** (`docs/research/2026-11-09-flutter-docs-notes.md`, read 2026-11-09 at the owner's request):
+  - **Floors:** `environment: sdk: ^3.13.0` in all three folders, and `flutter: ">=3.47.0"` in the SDK.
+  - **Dart 3.13:** primary constructors for value classes (`class ChatOption(final String key, final String label);`), dot shorthands, sealed classes with exhaustive `switch`, map patterns in `fromJson` (a `FormatException` only where a field is truly required), and null-aware elements.
+  - **Analysis:** `analysis_options.yaml` includes `flutter_lints` (`lints` in host_api) and sets `strict-casts`, `strict-inference` and `strict-raw-types`. Run `dart fix --apply` and `dart format .` before every commit.
+  - **Logging** goes through `package:logging` (`Logger('DavoDesk')`), never `print`; host_api uses shelf's request log and never logs headers.
+  - **Fakes:** `http`'s `MockClient` and hand-written fakes, with no `mockito` or `build_runner`.
+  - **Layering:** the files named in the tasks live at these paths, following Flutter's architecture guidance (services, then repositories, then the client):
+
+    | Named below | Lives at |
+    |---|---|
+    | `lib/src/core/models.dart` | `lib/src/domain/models.dart` |
+    | `lib/src/core/conversation.dart` | `lib/src/domain/conversation.dart` |
+    | `lib/src/core/api.dart` | `lib/src/data/services/api_service.dart` |
+    | `lib/src/core/chat_socket.dart` | `lib/src/data/services/chat_socket.dart` |
+    | `lib/src/core/session.dart` | `lib/src/data/repositories/session_repository.dart` |
+    | `lib/src/core/chat.dart` | `lib/src/data/repositories/chat_repository.dart` |
+    | `lib/src/core/unread.dart` | `lib/src/data/repositories/seen_repository.dart` |
+    | `lib/src/core/client.dart` | `lib/src/client.dart` |
+
+    Tests mirror the paths under `test/`. Class names stay as written.
 - **Commits** as Hyacinth-Chidi, with no Co-Authored-By trailer. Worktree `../worktrees/davodesk-flutter-client`, branch `feat/client`. Merge with `--no-ff`; never push. Each folder's `flutter analyze` / `dart analyze` stays clean.
 
 ## Review Focus
