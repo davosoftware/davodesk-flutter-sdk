@@ -1,7 +1,7 @@
 # DavoDesk for Flutter: the SDK, its support screens, an example app and its backend
 
-Date: 2026-11-09. Status: the screens and their split were approved by the owner on
-2026-11-09 ("approved"); this document is written for the owner's review.
+Date: 2026-11-09. Status: approved by the owner on 2026-11-09 ("no voice, other
+approved").
 
 ## 1. What the owner asked for
 
@@ -25,7 +25,7 @@ Date: 2026-11-09. Status: the screens and their split were approved by the owner
 | A notice at the top of the chat | First version |
 | A tagline under the chat header | First version |
 | A second logo for the coloured header | First version |
-| Voice notes | Later |
+| Voice notes | **Not planned** (the owner, 2026-11-09: "no voice") |
 | Order ID as a real field (in the message for now) | Later |
 | The emoji button and the chips | No API work |
 
@@ -144,7 +144,7 @@ They follow the approved mockup, which follows the owner's frames:
     as chips.
   - **The message box:** "Ask a question…" (or "Write a message…" once a person is
     there), attachments, emoji, and a send arrow that turns the brand's colour when there's
-    text. Voice notes come later.
+    text. There is no microphone: the owner ruled out voice notes.
   - "Reconnecting…", and "Too many messages. Try again in a minute.".
   - **A closed ticket** shows "This conversation was closed." and **Start a new
     conversation** in place of the box.
@@ -314,8 +314,6 @@ guide recommends and keeps the secret off the phone.
 
 ## 10. Not now
 
-- **Voice notes.** They need recording, audio files and a player, in the app and in
-  DavoDesk.
 - **Order ID as a real ticket field** the team can filter on. Until then it is a line in
   the message.
 - **The notice, tagline and header logo on the web widget.** Only the AI agent's name goes
