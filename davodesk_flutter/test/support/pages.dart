@@ -44,6 +44,7 @@ Future<PageHarness> pumpPage(
   FakeApi? api,
   double textScale = 1,
   void Function(DavoDeskClient client)? before,
+  Future<UploadFile?> Function(AttachFrom from)? pickAttachment,
 }) async {
   tester.view
     ..physicalSize = const Size(1170, 2532)
@@ -62,6 +63,7 @@ Future<PageHarness> pumpPage(
         client: client,
         config: config,
         go: (_, place) => harness.went.add(place),
+        pickAttachment: pickAttachment,
         openLink: (url) async {
           harness.links.add(url);
           return true;

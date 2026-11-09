@@ -80,6 +80,9 @@ class FakeApi {
   /// Every raise: its body and its idempotency key.
   final raised = <({Map<String, Object?> body, String? key})>[];
 
+  /// Every upload: the ticket and its files' names.
+  final attached = <({String ticketId, List<String> names})>[];
+
   /// The client the SDK talks through.
   late final http.Client httpClient = MockClient(_answer);
 
@@ -129,6 +132,17 @@ class FakeApi {
           throw http.ClientException('Connection closed before the answer');
         }
         return json({'resumed': false, 'ticket': ticketJson('t9')});
+      case ('POST', final p) when p.startsWith('/v1/attachments/tickets/'):
+        attached.add((
+          ticketId: p.split('/').last,
+          names: [
+            for (final match in RegExp(
+              r'filename="([^"]+)"',
+            ).allMatches(latin1.decode(request.bodyBytes)))
+              match.group(1)!,
+          ],
+        ));
+        return json({'attachments': <Object?>[]}, 201);
       case ('GET', '/v1/kb/public/app_1'):
         articleReads++;
         return json({'total': articleTotal, 'articles': <Object?>[]});

@@ -6,6 +6,8 @@ import 'package:material_ui/material_ui.dart';
 
 import '../domain/models.dart';
 import 'core/support_shell.dart';
+import 'features/conversation/conversation_page.dart';
+import 'features/conversation/conversation_view_model.dart';
 import 'features/home/home_page.dart';
 import 'features/home/home_view_model.dart';
 import 'features/messages/messages_page.dart';
@@ -125,6 +127,89 @@ Widget _messagesView(Brightness brightness, MessagesState state) => _screen(
     onBack: () {},
   ),
 );
+
+const _joined = ConversationState(
+  title: 'Mara',
+  subtitle: 'Davopay team · #9BBC55',
+  brandName: 'Davopay',
+  tagline: 'Your global money partner',
+  placeholder: 'Write a message…',
+  canAttach: true,
+  items: [
+    BubbleItem(
+      id: 'm1',
+      text: 'My virtual card refund hasn’t come back',
+      mine: true,
+    ),
+    BubbleItem(
+      id: 'm2',
+      text: 'I’ll pass you to the team, who can see your card’s history.',
+      label: 'Callie',
+      ai: true,
+    ),
+    JoinedItem('Mara'),
+    BubbleItem(
+      id: 'm3',
+      text: 'Hi Chukwu, I can see it. It’s back on your card now.',
+      label: 'Mara',
+    ),
+  ],
+);
+
+const _choosing = ConversationState(
+  title: 'Callie',
+  subtitle: 'The team can also help',
+  brandName: 'Davopay',
+  tagline: 'Your global money partner',
+  notice:
+      'We’re handling a high volume of requests, so replies may take a bit '
+      'longer than usual. Thanks for your patience.',
+  showComposer: false,
+  items: [
+    BubbleItem(
+      id: 'm1',
+      text:
+          'Hello Chukwu 👋, this is Callie from Davopay. Please choose the '
+          'option that best matches your request.',
+      label: 'Callie',
+      ai: true,
+    ),
+  ],
+  choices: [
+    ChatOption('t1', 'Account Management & Verification'),
+    ChatOption('t2', 'Virtual Cards (Creation, Funding, Refunds)'),
+    ChatOption('__else', 'Something Else'),
+  ],
+);
+
+Widget _conversationView(Brightness brightness, ConversationState state) =>
+    _screen(
+      brightness,
+      ConversationView(
+        state: state,
+        onSend: (_) {},
+        onChoose: (_) {},
+        onSolved: () {},
+        onTalkToPerson: () {},
+        onStartNew: () {},
+        onAttach: (_) {},
+        onOpenFile: (_) {},
+        onRetry: () {},
+        onBack: () {},
+      ),
+    );
+
+/// A person joined, light.
+@Preview(group: 'Conversation', name: 'Joined, light')
+Widget conversationLight() => _conversationView(Brightness.light, _joined);
+
+/// A person joined, dark.
+@Preview(group: 'Conversation', name: 'Joined, dark')
+Widget conversationDark() => _conversationView(Brightness.dark, _joined);
+
+/// The FAQ's choices, with the notice.
+@Preview(group: 'Conversation', name: 'Choices')
+Widget conversationChoices() => _conversationView(Brightness.light, _choosing);
 
 /// Home, light.
 @Preview(group: 'Home', name: 'Light')

@@ -60,9 +60,14 @@ class DavoDeskClient {
       session: _session,
       socketFactory: socketFactory,
     );
-    _chatEvents = _chat.events.listen(
-      (event) => _conversation.value = reduce(_conversation.value, event),
-    );
+    _chatEvents = _chat.events.listen((event) {
+      _conversation.value = reduce(_conversation.value, event);
+      // An ended chat answers nothing more: the next message needs a new one. A closed
+      // ticket waits for the customer's Start a new conversation.
+      if (event case EndedEvent(reason: 'helped' || 'idle')) {
+        unawaited(_chat.restart());
+      }
+    });
     _lifecycle = AppLifecycleListener(
       binding: WidgetsFlutterBinding.ensureInitialized(),
       onResume: () => unawaited(resumed()),

@@ -56,6 +56,24 @@ void main() {
     client.dispose();
   });
 
+  test(
+    'a chat that ended helped or idle starts afresh; a closed ticket waits',
+    () async {
+      final (:client, api: _, :sockets, identities: _) = arrange();
+      await client.start();
+      sockets.single.trigger('ended', {'reason': 'ticket_closed'});
+      await pumpEventQueue();
+      expect(sockets, hasLength(1));
+      sockets.single.trigger('ended', {'reason': 'helped'});
+      await pumpEventQueue();
+      expect(sockets, hasLength(2));
+      sockets.last.trigger('ended', {'reason': 'idle'});
+      await pumpEventQueue();
+      expect(sockets, hasLength(3));
+      client.dispose();
+    },
+  );
+
   test('an answers-only brand opens no socket and reads no tickets', () async {
     final (:client, :api, :sockets, identities: _) = arrange();
     api.supportMode = 'assistant_only';

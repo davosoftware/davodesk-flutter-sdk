@@ -1,7 +1,10 @@
+import 'package:file_selector/file_selector.dart';
 import 'package:flutter/widgets.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../client.dart';
+import '../../data/services/api_service.dart';
 import '../../domain/models.dart';
 import '../theme.dart';
 
@@ -42,6 +45,15 @@ final class const TicketPlace(final String id) extends SupportPlace {
   this;
 }
 
+/// Where an attachment comes from.
+enum AttachFrom {
+  /// The phone's photos.
+  photos,
+
+  /// A file, such as a PDF.
+  files,
+}
+
 /// What every support page reads: the [client], the channel's [config], how to [go]
 /// elsewhere, how to [openLink], and the app's [emailForm].
 class SupportScope extends InheritedWidget {
@@ -52,9 +64,11 @@ class SupportScope extends InheritedWidget {
     required this.config,
     required this.go,
     Future<bool> Function(Uri url)? openLink,
+    Future<UploadFile?> Function(AttachFrom from)? pickAttachment,
     this.emailForm,
     required super.child,
-  }) : openLink = openLink ?? _launch;
+  }) : openLink = openLink ?? _launch,
+       pickAttachment = pickAttachment ?? _pick;
 
   /// The customer's client.
   final DavoDeskClient client;
@@ -67,6 +81,9 @@ class SupportScope extends InheritedWidget {
 
   /// Opens a web link outside the app.
   final Future<bool> Function(Uri url) openLink;
+
+  /// Lets the customer pick a photo or a file; null when they cancel.
+  final Future<UploadFile?> Function(AttachFrom from) pickAttachment;
 
   /// The email form's words that belong to the app.
   final DavoDeskEmailForm? emailForm;
@@ -87,6 +104,40 @@ class SupportScope extends InheritedWidget {
 
 Future<bool> _launch(Uri url) =>
     launchUrl(url, mode: LaunchMode.externalApplication);
+
+Future<UploadFile?> _pick(AttachFrom from) async {
+  final file = switch (from) {
+    .photos => await ImagePicker().pickImage(source: ImageSource.gallery),
+    .files => await openFile(
+      acceptedTypeGroups: const [
+        XTypeGroup(
+          label: 'PDF',
+          extensions: ['pdf'],
+          mimeTypes: ['application/pdf'],
+          uniformTypeIdentifiers: ['com.adobe.pdf'],
+        ),
+      ],
+    ),
+  };
+  if (file == null) return null;
+  return UploadFile(
+    file.name,
+    await file.readAsBytes(),
+    file.mimeType ?? contentTypeOf(file.name),
+  );
+}
+
+/// The type a file's name suggests, for a picker that gives none.
+String contentTypeOf(String name) =>
+    switch (name.split('.').last.toLowerCase()) {
+      'jpg' || 'jpeg' => 'image/jpeg',
+      'png' => 'image/png',
+      'gif' => 'image/gif',
+      'webp' => 'image/webp',
+      'heic' => 'image/heic',
+      'pdf' => 'application/pdf',
+      _ => 'application/octet-stream',
+    };
 
 /// Whether a channel's link may be opened: http or https only, whatever its settings
 /// hold (the web widget's rule).
