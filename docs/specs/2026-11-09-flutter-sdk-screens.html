@@ -1,0 +1,457 @@
+<style>
+  .fx-page h2 { margin-bottom: 4px; }
+  .fx-section { margin: 34px 0 10px; }
+  .fx-section h3 { margin: 0 0 4px; font-size: 1.05rem; }
+  .fx-section p.lead { margin: 0; color: var(--text-secondary); font-size: 0.9rem; max-width: 760px; }
+  .fx-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 30px 22px; margin-top: 18px; align-items: start; }
+  .fx-col h4 { margin: 0 0 10px; font-size: 0.92rem; text-align: center; }
+  .fx-col .why { margin: 12px 6px 0; font-size: 0.82rem; line-height: 1.5; color: var(--text-secondary); }
+  .cards.fx-choice { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
+  .cards.fx-choice .card-image { aspect-ratio: auto; padding: 22px 0 6px; background: transparent; }
+
+  /* ---------- the phone ---------- */
+  .f-phone {
+    --accent: #1d4ed8; --accent-soft: #e8eefc; --ink: #0f172a; --ink2: #475569; --ink3: #94a3b8;
+    --rule: #e5e7eb; --paper: #ffffff; --shelf: #f5f6f8; --ok: #15803d; --okbg: #dcfce7; --warn: #b45309; --warnbg: #fef3c7;
+    width: 300px; height: 640px; margin: 0 auto; padding: 9px; border-radius: 38px; background: #0b0d12;
+    box-shadow: 0 20px 50px rgba(15, 23, 42, 0.28), 0 2px 6px rgba(15, 23, 42, 0.12);
+  }
+  .f-phone.dark {
+    --accent-soft: #1b2a55; --ink: #e8ebf2; --ink2: #a4adbf; --ink3: #6b7487; --rule: #252a35; --paper: #14171d; --shelf: #0b0d12;
+    --okbg: #10301d; --ok: #4ade80; --warnbg: #3a2a0c; --warn: #fbbf24;
+  }
+  .f-screen { position: relative; height: 100%; border-radius: 30px; overflow: hidden; background: var(--shelf); color: var(--ink);
+    display: flex; flex-direction: column; font-family: Roboto, 'Segoe UI', system-ui, sans-serif; font-size: 14px; line-height: 1.4; }
+  .f-status { height: 28px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 0 22px 0 24px;
+    font-size: 12px; font-weight: 600; background: var(--paper); color: var(--ink); }
+  .f-status.blue { background: var(--accent); color: #fff; }
+  .f-status i { display: inline-flex; gap: 4px; align-items: center; font-style: normal; }
+  .f-gesture { height: 20px; flex: none; display: grid; place-items: center; background: var(--paper); }
+  .f-gesture::after { content: ''; width: 104px; height: 4px; border-radius: 2px; background: var(--ink); opacity: 0.35; }
+  svg.f-i { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+  svg.f-i.s { width: 16px; height: 16px; }
+
+  /* the blue header, as on the web */
+  .f-hd { background: var(--accent); color: #fff; padding: 12px 18px 18px; flex: none; }
+  .f-hd .top { display: flex; align-items: center; gap: 11px; }
+  .f-tile { width: 32px; height: 32px; border-radius: 9px; flex: none; display: grid; place-items: center; font-weight: 700; }
+  .f-tile.logo { background: #fff; padding: 4px; }
+  .f-tile.logo.edge { box-shadow: inset 0 0 0 1px var(--rule); }
+  .f-tile.initial { background: rgba(255, 255, 255, 0.2); color: #fff; }
+  .f-hd .title { flex: 1; font-weight: 700; font-size: 16px; }
+  .f-hd .greet { margin: 14px 0 12px; font-size: 23px; line-height: 1.22; font-weight: 800; letter-spacing: -0.01em; }
+  .f-ask { display: flex; align-items: center; gap: 10px; background: #fff; color: #64748b; border-radius: 12px; padding: 12px 14px; font-size: 15px; }
+
+  /* white header for inner pages */
+  .f-bar { flex: none; display: flex; align-items: center; gap: 10px; padding: 8px 12px 10px 8px; background: var(--paper); border-bottom: 1px solid var(--rule); min-height: 56px; }
+  .f-bar .btn { width: 36px; height: 36px; display: grid; place-items: center; border-radius: 18px; color: var(--ink); flex: none; }
+  .f-bar .who { flex: 1; min-width: 0; }
+  .f-bar .who b { display: block; font-size: 15.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .f-bar .who small { display: block; color: var(--ink2); font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .f-bar .centred { flex: 1; text-align: center; font-weight: 700; font-size: 16px; }
+
+  .f-body { flex: 1; overflow: hidden; padding: 12px 12px 0; display: flex; flex-direction: column; gap: 10px; }
+  .f-card { background: var(--paper); border-radius: 16px; border: 1px solid var(--rule); flex: none; }
+  .f-phone:not(.dark) .f-card { border-color: rgba(15, 23, 42, 0.06); box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05), 0 4px 14px rgba(15, 23, 42, 0.05); }
+  .f-row { display: flex; align-items: center; gap: 12px; padding: 12px 16px; font-size: 15px; }
+  .f-row .grow { flex: 1; min-width: 0; }
+  .f-row b { font-weight: 600; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .f-row small { display: block; color: var(--ink2); font-size: 12.5px; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .f-blue { color: var(--accent); }
+  .f-phone.dark .f-blue { color: #7ea0ff; }
+  .f-cardhead { padding: 12px 16px 2px; font-size: 12px; font-weight: 600; color: var(--ink2); }
+  .f-q { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; font-size: 14.5px; color: var(--ink); border-top: 1px solid transparent; }
+  .f-q + .f-q { border-top-color: var(--rule); }
+  .f-q svg { color: var(--ink3); }
+  .f-av { width: 36px; height: 36px; border-radius: 50%; flex: none; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); font-weight: 700; font-size: 14px; }
+  .f-phone.dark .f-av { color: #9db6ff; }
+  .f-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--accent); flex: none; }
+  .f-pill { display: inline-block; margin-top: 6px; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; }
+  .f-pill.reply { background: var(--warnbg); color: var(--warn); }
+  .f-pill.solved { background: var(--okbg); color: var(--ok); }
+  .f-pill.closed { background: var(--rule); color: var(--ink2); }
+  .f-pill.open { background: var(--accent-soft); color: var(--accent); }
+  .f-powered { display: flex; align-items: center; justify-content: center; gap: 6px; color: var(--ink3); font-size: 11.5px; padding: 6px 0 10px; }
+
+  /* bottom navigation (Material 3, our colours) */
+  .f-tabs { flex: none; display: flex; background: var(--paper); border-top: 1px solid var(--rule); padding: 8px 0 6px; }
+  .f-tab { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 12px; color: var(--ink2); font-weight: 500; }
+  .f-tab .ind { position: relative; width: 56px; height: 30px; border-radius: 15px; display: grid; place-items: center; }
+  .f-tab.on { color: var(--ink); font-weight: 700; }
+  .f-tab.on .ind { background: var(--accent-soft); color: var(--accent); }
+  .f-phone.dark .f-tab.on .ind { color: #9db6ff; }
+  .f-badge { position: absolute; top: 1px; right: 10px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 8px; background: #dc2626; color: #fff; font-size: 10px; font-weight: 700; display: grid; place-items: center; }
+
+  /* lists */
+  .f-list { flex: 1; overflow: hidden; background: var(--paper); }
+  .f-conv { display: flex; gap: 12px; padding: 13px 16px; border-bottom: 1px solid var(--rule); align-items: flex-start; }
+  .f-conv .grow { flex: 1; min-width: 0; }
+  .f-conv .t { display: flex; justify-content: space-between; gap: 8px; font-weight: 600; font-size: 14.5px; }
+  .f-conv .t span:first-child { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .f-conv .t span:last-child { font-weight: 400; color: var(--ink3); font-size: 12px; flex: none; }
+  .f-conv .s { color: var(--ink2); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
+  .f-conv .f-dot { margin-top: 26px; }
+  .f-actionbar { flex: none; padding: 12px 16px; background: var(--paper); border-top: 1px solid var(--rule); }
+  .f-btn { display: flex; align-items: center; justify-content: center; gap: 8px; height: 48px; border-radius: 14px; background: var(--accent); color: #fff; font-weight: 600; font-size: 15px; }
+  .f-btn.ghost { background: var(--paper); color: var(--ink); border: 1px solid var(--rule); height: 40px; font-size: 14px; border-radius: 12px; }
+
+  /* search and collections */
+  .f-search { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: 12px; background: var(--paper); border: 1px solid var(--rule); color: var(--ink3); font-size: 15px; }
+  .f-coll { display: flex; align-items: center; gap: 12px; padding: 14px 16px; }
+  .f-coll + .f-coll { border-top: 1px solid var(--rule); }
+  .f-coll .ic { width: 36px; height: 36px; border-radius: 10px; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; flex: none; }
+  .f-coll .grow b { display: block; font-weight: 600; font-size: 14.5px; }
+  .f-coll .grow small { color: var(--ink2); font-size: 12.5px; }
+
+  /* conversation */
+  .f-chat { flex: 1; overflow: hidden; padding: 12px 12px 6px; display: flex; flex-direction: column; gap: 8px; background: var(--paper); }
+  .f-msg { max-width: 82%; padding: 9px 12px; border-radius: 16px; font-size: 14px; line-height: 1.38; }
+  .f-msg.me { align-self: flex-end; background: var(--accent); color: #fff; border-bottom-right-radius: 6px; }
+  .f-msg.them { align-self: flex-start; background: var(--shelf); color: var(--ink); border-bottom-left-radius: 6px; }
+  .f-phone:not(.dark) .f-msg.them { background: #f1f3f7; }
+  .f-msg .name { display: block; font-size: 11.5px; font-weight: 700; color: var(--ink2); margin-bottom: 2px; }
+  .f-source { display: inline-flex; align-items: center; gap: 5px; margin-top: 7px; padding: 4px 9px; border-radius: 999px; background: var(--paper); border: 1px solid var(--rule); font-size: 12px; color: var(--ink2); }
+  .f-sys { align-self: center; font-size: 12px; color: var(--ink3); padding: 2px 0; }
+  .f-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .f-chip { padding: 8px 14px; border-radius: 999px; border: 1px solid var(--rule); background: var(--paper); font-size: 13.5px; font-weight: 600; color: var(--ink); }
+  .f-chip.primary { border-color: var(--accent); color: var(--accent); }
+  .f-composer { flex: none; display: flex; align-items: center; gap: 8px; padding: 8px 10px 10px; background: var(--paper); border-top: 1px solid var(--rule); }
+  .f-composer .field { flex: 1; padding: 11px 14px; border-radius: 22px; background: var(--shelf); color: var(--ink3); font-size: 14.5px; }
+  .f-phone:not(.dark) .f-composer .field { background: #f1f3f7; }
+  .f-composer .round { width: 40px; height: 40px; border-radius: 20px; display: grid; place-items: center; color: var(--ink2); flex: none; }
+  .f-composer .round.send { background: var(--accent); color: #fff; }
+  .f-state { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; }
+  .f-rate { margin-top: 4px; padding: 14px; border-radius: 16px; border: 1px solid var(--rule); background: var(--paper); }
+  .f-rate b { display: block; font-size: 14.5px; margin-bottom: 10px; }
+  .f-seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .f-seg span { text-align: center; padding: 9px 0; border-radius: 12px; border: 1px solid var(--rule); font-size: 13.5px; font-weight: 600; }
+  .f-seg span.on { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+  .f-input { margin-top: 10px; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--rule); color: var(--ink3); font-size: 13.5px; }
+
+  /* the host app behind a sheet */
+  .f-app { position: absolute; inset: 0; background: #f4f4f7; display: flex; flex-direction: column; }
+  .f-app .appbar { height: 56px; display: flex; align-items: center; padding: 0 18px; font-weight: 700; font-size: 18px; background: #fff; border-bottom: 1px solid #e5e7eb; }
+  .f-scrim { position: absolute; inset: 0; background: rgba(15, 23, 42, 0.42); }
+  .f-sheet { position: absolute; left: 0; right: 0; bottom: 0; top: 70px; border-radius: 22px 22px 0 0; overflow: hidden; display: flex; flex-direction: column; background: var(--shelf); }
+  .f-grab { position: absolute; top: 7px; left: 50%; width: 36px; height: 4px; margin-left: -18px; border-radius: 2px; background: rgba(255, 255, 255, 0.6); z-index: 2; }
+</style>
+<style>
+  /* Your Davopay design, as SDK screens */
+  .d-phone { --accent: #1e5af0; --accent-soft: #e9effe; }
+  .d-home { flex: 1; overflow: hidden; display: flex; flex-direction: column;
+    background: linear-gradient(180deg, var(--accent) 0, var(--accent) 178px, #dfe8fd 250px, var(--shelf) 330px); }
+  .d-hd { color: #fff; padding: 8px 18px 0; flex: none; }
+  .d-top { display: flex; align-items: center; justify-content: space-between; height: 40px; }
+  .d-word { display: inline-flex; align-items: center; gap: 6px; font-weight: 800; font-size: 19px; letter-spacing: -0.02em; }
+  .d-x { width: 30px; height: 30px; border-radius: 9px; background: rgba(255, 255, 255, 0.2); display: grid; place-items: center; }
+  .d-greet { margin: 22px 0 18px; font-size: 21px; line-height: 1.3; font-weight: 800; }
+  .d-cards { padding: 0 14px; display: flex; flex-direction: column; gap: 12px; }
+  .d-card { background: #fff; border-radius: 14px; box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06), 0 6px 18px rgba(15, 23, 42, 0.06); }
+  .d-rowx { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 14px 16px; font-size: 14.5px; font-weight: 600; color: var(--ink); }
+  .d-rowx + .d-rowx { border-top: 1px solid var(--rule); }
+  .d-rowx svg { color: var(--accent); }
+  .d-link { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 11px 16px; font-size: 13px; color: var(--ink); }
+  .d-link + .d-link { border-top: 1px solid var(--rule); }
+  .d-link svg { color: var(--accent); }
+  .d-pill-btns { display: flex; gap: 4px; padding: 3px; border-radius: 12px; background: #f1f3f7; }
+  .d-pill-btns span { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 9px; color: var(--ink); }
+  .d-roundbtn { width: 32px; height: 32px; border-radius: 16px; background: #f1f3f7; display: grid; place-items: center; color: var(--ink); flex: none; }
+  .d-empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 0 30px 60px; background: #fff; }
+  .d-empty b { font-size: 16px; margin-top: 10px; }
+  .d-empty p { margin: 4px 0 16px; color: var(--ink2); font-size: 13.5px; }
+  .d-cta { display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 12px; background: var(--accent); color: #fff; font-weight: 600; font-size: 14px; }
+  .d-chathd { flex: none; display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: #fff; }
+  .d-chathd .who { flex: 1; min-width: 0; }
+  .d-chathd .who b { display: block; font-size: 15px; }
+  .d-chathd .who small { display: block; font-size: 12px; color: var(--ink2); }
+  .d-mark { color: var(--accent); display: grid; place-items: center; }
+  .d-chat { flex: 1; overflow: hidden; padding: 4px 14px 8px; display: flex; flex-direction: column; gap: 10px; background: #fff; }
+  .d-tag { text-align: center; color: var(--ink2); font-size: 11.5px; }
+  .d-note { display: flex; gap: 8px; padding: 10px 12px; border: 1px solid var(--rule); border-radius: 12px; color: var(--ink2); font-size: 11.5px; line-height: 1.45; }
+  .d-note svg { color: var(--ink3); margin-top: 1px; }
+  .d-bot { align-self: flex-start; max-width: 84%; }
+  .d-bot .lbl { display: flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 700; color: var(--ink); margin: 0 0 4px 2px; }
+  .d-bot .lbl em { font-style: normal; font-weight: 600; color: var(--ink2); }
+  .d-bot .bub { padding: 9px 12px; border-radius: 14px; border-top-left-radius: 4px; background: #f1f3f7; font-size: 13.5px; line-height: 1.4; }
+  .d-me { align-self: flex-end; max-width: 78%; padding: 9px 12px; border-radius: 14px; border-top-right-radius: 4px; background: var(--accent); color: #fff; font-size: 13.5px; }
+  .d-chips { display: flex; flex-direction: column; align-items: flex-end; gap: 7px; }
+  .d-chip { padding: 7px 12px; border-radius: 999px; border: 1px solid #c9d7fb; color: var(--accent); background: #fff; font-size: 12.5px; font-weight: 600; }
+  .d-sys { align-self: center; font-size: 11.5px; color: var(--ink3); }
+  .d-composer { flex: none; margin: 6px 12px 8px; border: 1px solid var(--rule); border-radius: 16px; padding: 10px 12px 8px; background: #fff; }
+  .d-composer .ph { color: var(--ink3); font-size: 14px; }
+  .d-composer .tools { display: flex; align-items: center; gap: 14px; margin-top: 10px; color: var(--ink2); }
+  .d-composer .send { margin-left: auto; width: 30px; height: 30px; border-radius: 15px; background: #e7ebf3; color: var(--ink2); display: grid; place-items: center; }
+  .d-form { flex: 1; overflow: hidden; padding: 14px 18px; background: #fff; display: flex; flex-direction: column; gap: 10px; }
+  .d-form h5 { margin: 0; font-size: 16px; }
+  .d-form p { margin: 0; color: var(--ink2); font-size: 12.5px; line-height: 1.45; }
+  .d-hl { display: flex; gap: 10px; align-items: flex-start; padding: 12px; border-radius: 12px; background: #eef3ff; border: 1px solid #cbd9fc; }
+  .d-hl .ic { width: 30px; height: 30px; border-radius: 8px; background: var(--accent); color: #fff; display: grid; place-items: center; flex: none; }
+  .d-hl b { display: block; color: var(--accent); font-size: 13.5px; }
+  .d-hl span { font-size: 12px; color: var(--ink2); }
+  .d-lbl { display: flex; justify-content: space-between; align-items: center; font-size: 12.5px; font-weight: 700; margin-top: 2px; }
+  .d-opt { font-size: 9.5px; font-weight: 700; letter-spacing: 0.06em; color: var(--ink2); background: #f1f3f7; padding: 2px 6px; border-radius: 4px; }
+  .d-in { padding: 11px 12px; border-radius: 10px; background: #f3f5f8; color: var(--ink3); font-size: 13px; }
+  .d-in.tall { height: 64px; }
+  .d-send { margin-top: 4px; height: 42px; border-radius: 10px; background: var(--accent); color: #fff; font-weight: 700; font-size: 14px; display: grid; place-items: center; }
+  .fx-new { margin-top: 30px; padding: 18px 20px; border-radius: 14px; border: 1px solid var(--border); background: var(--bg-secondary); }
+  .fx-new h3 { margin: 0 0 8px; }
+  .fx-new ul { margin: 6px 0 0; padding-left: 20px; }
+  .fx-new li { margin: 5px 0; font-size: 0.9rem; line-height: 1.5; }
+  .fx-new .tag { display: inline-block; font-size: 0.7rem; font-weight: 700; padding: 1px 7px; border-radius: 999px; margin-left: 6px; vertical-align: 1px; }
+  .fx-new .tag.v1 { background: #dcfce7; color: #15803d; }
+  .fx-new .tag.later { background: #fef3c7; color: #b45309; }
+  .fx-new .tag.none { background: #e0e7ff; color: #3730a3; }
+</style>
+
+<div class="fx-page">
+  <h2>Your Davopay design, as the SDK’s screens</h2>
+  <p class="subtitle">Following the screens you sent. Davopay’s details (logo, colour, links, Callie, the notice and the tagline) come from Davopay’s settings in DavoDesk, so every company’s app shows its own. Full screen, as your frames show.</p>
+
+  <div class="fx-grid">
+
+    <!-- 1 Home -->
+    <div class="fx-col">
+      <h4>Home</h4>
+      <div class="f-phone d-phone"><div class="f-screen">
+        <div class="d-home">
+          <div class="f-status blue" style="background:transparent"><span>9:41</span><i>5G <svg class="f-i s" viewBox="0 0 24 24"><rect x="2" y="7" width="18" height="10" rx="2"/><path d="M22 11v2"/></svg></i></div>
+          <div class="d-hd">
+            <div class="d-top">
+              <span class="d-word"><svg width="26" height="18" viewBox="0 0 26 18"><path d="M6 1h10a8 8 0 0 1 0 16H1z" fill="#fff"/></svg>Davopay</span>
+              <span class="d-x"><svg class="f-i s" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></span>
+            </div>
+            <div class="d-greet">Hi Chukwu 👋<br>How can we help?</div>
+          </div>
+          <div class="d-cards">
+            <div class="d-card">
+              <div class="d-rowx">Messages<svg class="f-i s" viewBox="0 0 24 24"><path d="M4 5h16v11H8l-4 4z"/></svg></div>
+              <div class="d-rowx">Help<svg class="f-i s" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .8-1 1.5V14M12 17.5v.01"/></svg></div>
+            </div>
+            <div class="d-card"><div class="d-rowx">Send us a message<svg class="f-i s" viewBox="0 0 24 24"><path d="M4 12l16-8-6 16-2.5-6.5z"/></svg></div></div>
+            <div class="d-card">
+              <div class="d-link">Explore Rewards: Key Details You Should Know<svg class="f-i s" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg></div>
+              <div class="d-link">Unlock More Earnings with Every Referral<svg class="f-i s" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg></div>
+              <div class="d-link">Everything About Your Virtual Dollar Card<svg class="f-i s" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg></div>
+              <div class="d-link">Join Our Community Channel<svg class="f-i s" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg></div>
+            </div>
+          </div>
+          <div class="f-powered" style="margin-top:auto"><img src="2026-11-09-davodesk-mark.png" width="13" height="13" alt="">Powered by DavoDesk</div>
+        </div>
+        <div class="f-gesture" style="background:var(--shelf)"></div>
+      </div></div>
+      <p class="why">Your layout: no tabs. Messages and Help are rows, Send us a message opens the email form, and the links are the channel’s home links. A conversation in progress would show as a card above Messages, as on the web. Powered by DavoDesk stays, small, at the bottom.</p>
+    </div>
+
+    <!-- 2 Messages empty -->
+    <div class="fx-col">
+      <h4>Messages, empty</h4>
+      <div class="f-phone d-phone"><div class="f-screen">
+        <div class="f-status"><span>9:41</span><i>5G <svg class="f-i s" viewBox="0 0 24 24"><rect x="2" y="7" width="18" height="10" rx="2"/><path d="M22 11v2"/></svg></i></div>
+        <div class="d-chathd" style="border-bottom:1px solid var(--rule)">
+          <span class="d-roundbtn"><svg class="f-i s" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></span>
+          <span class="who" style="text-align:center"><b>Messages</b></span>
+          <span class="d-pill-btns"><span><svg class="f-i s" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></span><span><svg class="f-i s" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></span></span>
+        </div>
+        <div class="d-empty">
+          <svg class="f-i" style="color:var(--accent);width:30px;height:30px" viewBox="0 0 24 24"><path d="M4 5h16v11H8l-4 4z"/></svg>
+          <b>No Messages</b>
+          <p>Messages from the team will be shown here</p>
+          <span class="d-cta">Ask a question <svg class="f-i s" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .8-1 1.5V14M12 17.5v.01"/></svg></span>
+        </div>
+        <div class="f-gesture"></div>
+      </div></div>
+      <p class="why">Your empty state. The pencil in the header starts a new conversation, in place of the web’s bottom bar.</p>
+    </div>
+
+    <!-- 3 Messages list -->
+    <div class="fx-col">
+      <h4>Messages, with conversations</h4>
+      <div class="f-phone d-phone"><div class="f-screen">
+        <div class="f-status"><span>9:41</span><i>5G <svg class="f-i s" viewBox="0 0 24 24"><rect x="2" y="7" width="18" height="10" rx="2"/><path d="M22 11v2"/></svg></i></div>
+        <div class="d-chathd" style="border-bottom:1px solid var(--rule)">
+          <span class="d-roundbtn"><svg class="f-i s" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></span>
+          <span class="who" style="text-align:center"><b>Messages</b></span>
+          <span class="d-pill-btns"><span><svg class="f-i s" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></span><span><svg class="f-i s" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></span></span>
+        </div>
+        <div class="f-list">
+          <div class="f-conv"><span class="f-av">C</span><span class="grow"><span class="t"><span>Virtual card refund</span><span>2m</span></span><div class="s">Mara: The refund is back on your card</div><span class="f-pill reply">Reply · #9BBC55</span></span><span class="f-dot"></span></div>
+          <div class="f-conv"><span class="f-av">Y</span><span class="grow"><span class="t"><span>Withdrawal to my bank account</span><span>Tue</span></span><div class="s">You: Thanks, it arrived</div><span class="f-pill solved">Solved · #A31F07</span></span></div>
+          <div class="f-conv"><span class="f-av">D</span><span class="grow"><span class="t"><span>Account verification</span><span>4 Nov</span></span><div class="s">Davopay team: You’re verified now</div><span class="f-pill closed">Closed · #FE0F95</span></span></div>
+        </div>
+        <div class="f-gesture"></div>
+      </div></div>
+      <p class="why">The list as on the web: subject, who wrote last, state and reference, and an unread dot.</p>
+    </div>
+
+    <!-- 4 Chat start -->
+    <div class="fx-col">
+      <h4>A new conversation</h4>
+      <div class="f-phone d-phone"><div class="f-screen">
+        <div class="f-status"><span>9:41</span><i>5G <svg class="f-i s" viewBox="0 0 24 24"><rect x="2" y="7" width="18" height="10" rx="2"/><path d="M22 11v2"/></svg></i></div>
+        <div class="d-chathd">
+          <span class="d-mark"><svg width="28" height="20" viewBox="0 0 26 18"><path d="M6 1h10a8 8 0 0 1 0 16H1z" fill="currentColor"/></svg></span>
+          <span class="who"><b>Callie</b><small>The team can also help</small></span>
+          <span class="d-roundbtn"><svg class="f-i s" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></span>
+        </div>
+        <div class="d-chat">
+          <div class="d-tag">Your global money partner</div>
+          <div class="d-note"><svg class="f-i s" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8v.01"/></svg><span>We’re handling a high volume of requests, so replies may take a bit longer than usual. Thanks for your patience.</span></div>
+          <div class="d-bot"><div class="lbl"><svg width="16" height="12" viewBox="0 0 26 18"><path d="M6 1h10a8 8 0 0 1 0 16H1z" fill="var(--accent)"/></svg>Callie <em>· AI Agent</em></div><div class="bub">Hello Chukwu 👋, this is Callie from Davopay. Please choose the option that best matches your request.</div></div>
+          <div class="d-chips">
+            <span class="d-chip">Account Management &amp; Verification</span>
+            <span class="d-chip">Virtual Cards (Creation, Funding, Refunds)</span>
+            <span class="d-chip">Gift Cards, Crypto</span>
+            <span class="d-chip">Deposits and Funding</span>
+            <span class="d-chip">Withdrawals to a Bank Account</span>
+            <span class="d-chip">Something Else</span>
+          </div>
+        </div>
+        <div class="f-gesture" style="background:#fff"></div>
+      </div></div>
+      <p class="why">The AI agent has the brand’s own name (Callie), and the team’s notice and tagline sit at the top. The FAQ topics are chips, and the message box appears once one is chosen.</p>
+    </div>
+
+    <!-- 5 Chat after choice -->
+    <div class="fx-col">
+      <h4>After a choice</h4>
+      <div class="f-phone d-phone"><div class="f-screen">
+        <div class="f-status"><span>9:41</span><i>5G <svg class="f-i s" viewBox="0 0 24 24"><rect x="2" y="7" width="18" height="10" rx="2"/><path d="M22 11v2"/></svg></i></div>
+        <div class="d-chathd">
+          <span class="d-mark"><svg width="28" height="20" viewBox="0 0 26 18"><path d="M6 1h10a8 8 0 0 1 0 16H1z" fill="currentColor"/></svg></span>
+          <span class="who"><b>Callie</b><small>The team can also help</small></span>
+          <span class="d-roundbtn"><svg class="f-i s" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></span>
+        </div>
+        <div class="d-chat">
+          <div class="d-tag">Your global money partner</div>
+          <div class="d-bot"><div class="lbl"><svg width="16" height="12" viewBox="0 0 26 18"><path d="M6 1h10a8 8 0 0 1 0 16H1z" fill="var(--accent)"/></svg>Callie <em>· AI Agent</em></div><div class="bub">Hello Chukwu 👋, this is Callie from Davopay. Please choose the option that best matches your request.</div></div>
+          <div class="d-me">Virtual Cards (Creation, Funding, Refunds)</div>
+          <div class="d-bot"><div class="lbl"><svg width="16" height="12" viewBox="0 0 26 18"><path d="M6 1h10a8 8 0 0 1 0 16H1z" fill="var(--accent)"/></svg>Callie <em>· AI Agent</em></div><div class="bub">To give you the best answer, please share as much detail as you can.</div></div>
+        </div>
+        <div class="d-composer">
+          <div class="ph">Ask a question…</div>
+          <div class="tools">
+            <svg class="f-i s" viewBox="0 0 24 24"><path d="M20.5 11.5l-8.6 8.6a5 5 0 0 1-7.1-7.1l8.6-8.6a3.3 3.3 0 0 1 4.7 4.7l-8.6 8.6a1.7 1.7 0 0 1-2.4-2.4l7.9-7.9"/></svg>
+            <svg class="f-i s" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8.5 14a4 4 0 0 0 7 0M9 9.5h.01M15 9.5h.01"/></svg>
+            <svg class="f-i s" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+            <span class="send"><svg class="f-i s" viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6"/></svg></span>
+          </div>
+        </div>
+        <div class="f-gesture" style="background:#fff"></div>
+      </div></div>
+      <p class="why">Your message box, with attachments, emoji and a voice note. The send arrow turns blue once there’s something to send.</p>
+    </div>
+
+    <!-- 6 Agent joined -->
+    <div class="fx-col">
+      <h4>A person joins</h4>
+      <div class="f-phone d-phone"><div class="f-screen">
+        <div class="f-status"><span>9:41</span><i>5G <svg class="f-i s" viewBox="0 0 24 24"><rect x="2" y="7" width="18" height="10" rx="2"/><path d="M22 11v2"/></svg></i></div>
+        <div class="d-chathd">
+          <span class="d-mark"><svg width="28" height="20" viewBox="0 0 26 18"><path d="M6 1h10a8 8 0 0 1 0 16H1z" fill="currentColor"/></svg></span>
+          <span class="who"><b>Mara</b><small>Davopay team · #9BBC55</small></span>
+          <span class="d-roundbtn"><svg class="f-i s" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></span>
+        </div>
+        <div class="d-chat">
+          <div class="d-me">My virtual card refund hasn’t come back</div>
+          <div class="d-bot"><div class="lbl"><svg width="16" height="12" viewBox="0 0 26 18"><path d="M6 1h10a8 8 0 0 1 0 16H1z" fill="var(--accent)"/></svg>Callie <em>· AI Agent</em></div><div class="bub">I’ll pass you to the team, who can see your card’s history.</div></div>
+          <div class="d-sys">Mara joined</div>
+          <div class="d-bot"><div class="lbl"><span class="f-av" style="width:18px;height:18px;font-size:10px">M</span>Mara</div><div class="bub">Hi Chukwu, I can see it. It’s back on your card now.</div></div>
+        </div>
+        <div class="d-composer">
+          <div class="ph">Write a message…</div>
+          <div class="tools">
+            <svg class="f-i s" viewBox="0 0 24 24"><path d="M20.5 11.5l-8.6 8.6a5 5 0 0 1-7.1-7.1l8.6-8.6a3.3 3.3 0 0 1 4.7 4.7l-8.6 8.6a1.7 1.7 0 0 1-2.4-2.4l7.9-7.9"/></svg>
+            <svg class="f-i s" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8.5 14a4 4 0 0 0 7 0M9 9.5h.01M15 9.5h.01"/></svg>
+            <svg class="f-i s" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+            <span class="send"><svg class="f-i s" viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6"/></svg></span>
+          </div>
+        </div>
+        <div class="f-gesture" style="background:#fff"></div>
+      </div></div>
+      <p class="why">Our agent names, in your style. The header shows who is helping now, with the reference.</p>
+    </div>
+
+    <!-- 7 Email Support -->
+    <div class="fx-col">
+      <h4>Email Support (Send us a message)</h4>
+      <div class="f-phone d-phone"><div class="f-screen">
+        <div class="f-status"><span>9:41</span><i>5G <svg class="f-i s" viewBox="0 0 24 24"><rect x="2" y="7" width="18" height="10" rx="2"/><path d="M22 11v2"/></svg></i></div>
+        <div class="d-chathd">
+          <span class="btn" style="width:28px"><svg class="f-i s" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></span>
+          <span class="who" style="text-align:center;margin-right:28px"><b>Email Support</b></span>
+        </div>
+        <div class="d-form">
+          <h5>Email Us</h5>
+          <p>Have a question about your order or our services? Our team is here to help.</p>
+          <div class="d-hl"><span class="ic"><svg class="f-i s" viewBox="0 0 24 24"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg></span><span><b>Rapid Response</b><span>We typically respond to all email inquiries within 24 hours.</span></span></div>
+          <div class="d-lbl">Subject</div>
+          <div class="d-in">What can we help you with?</div>
+          <div class="d-lbl">Order ID <span class="d-opt">OPTIONAL</span></div>
+          <div class="d-in">e.g. #VP-8291</div>
+          <div class="d-lbl">Message</div>
+          <div class="d-in tall">Tell us more about your inquiry…</div>
+          <div class="d-send">Send Email</div>
+        </div>
+        <div class="f-gesture" style="background:#fff"></div>
+      </div></div>
+      <p class="why">Raises a ticket without chat. The reply comes to Messages and by email. Your first field was labelled “Message” twice, so I named this one Subject.</p>
+    </div>
+
+    <!-- 8 Help -->
+    <div class="fx-col">
+      <h4>Help</h4>
+      <div class="f-phone d-phone"><div class="f-screen">
+        <div class="f-status"><span>9:41</span><i>5G <svg class="f-i s" viewBox="0 0 24 24"><rect x="2" y="7" width="18" height="10" rx="2"/><path d="M22 11v2"/></svg></i></div>
+        <div class="d-chathd" style="border-bottom:1px solid var(--rule)">
+          <span class="d-roundbtn"><svg class="f-i s" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></span>
+          <span class="who" style="text-align:center"><b>Help</b></span>
+          <span class="d-roundbtn"><svg class="f-i s" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></span>
+        </div>
+        <div class="f-body" style="background:#fff">
+          <div class="d-in" style="display:flex;gap:8px;align-items:center"><svg class="f-i s" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>Search help articles</div>
+          <div class="d-card" style="box-shadow:none;border:1px solid var(--rule)">
+            <div class="f-coll"><span class="ic"><svg class="f-i s" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/></svg></span><span class="grow"><b>Virtual cards</b><small>8 articles</small></span><svg class="f-i s" style="color:var(--ink3)" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></div>
+            <div class="f-coll"><span class="ic"><svg class="f-i s" viewBox="0 0 24 24"><path d="M12 3v18M17 7.5c0-1.9-2.2-3.5-5-3.5s-5 1.6-5 3.5S9.2 11 12 11s5 1.6 5 3.5S14.8 18 12 18s-5-1.6-5-3.5"/></svg></span><span class="grow"><b>Deposits and withdrawals</b><small>6 articles</small></span><svg class="f-i s" style="color:var(--ink3)" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></div>
+            <div class="f-coll"><span class="ic"><svg class="f-i s" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></span><span class="grow"><b>Account and verification</b><small>5 articles</small></span><svg class="f-i s" style="color:var(--ink3)" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></div>
+          </div>
+        </div>
+        <div class="f-gesture" style="background:#fff"></div>
+      </div></div>
+      <p class="why">Your frames don’t show Help, so this is ours in your style: search, then the brand’s collections.</p>
+    </div>
+
+    <!-- 9 Closed -->
+    <div class="fx-col">
+      <h4>A closed conversation</h4>
+      <div class="f-phone d-phone"><div class="f-screen">
+        <div class="f-status"><span>9:41</span><i>5G <svg class="f-i s" viewBox="0 0 24 24"><rect x="2" y="7" width="18" height="10" rx="2"/><path d="M22 11v2"/></svg></i></div>
+        <div class="d-chathd">
+          <span class="d-roundbtn"><svg class="f-i s" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></span>
+          <span class="who"><b>Account verification</b><small>Closed · #FE0F95</small></span>
+          <span class="d-roundbtn"><svg class="f-i s" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></span>
+        </div>
+        <div class="d-chat">
+          <div class="d-me">Why is my account not verified yet?</div>
+          <div class="d-bot"><div class="lbl"><span class="f-av" style="width:18px;height:18px;font-size:10px">D</span>Davopay team</div><div class="bub">You’re verified now. Closing this, as it’s sorted.</div></div>
+          <div class="d-sys">This conversation was closed.</div>
+        </div>
+        <div class="f-actionbar"><div class="f-btn">Start a new conversation</div></div>
+        <div class="f-gesture"></div>
+      </div></div>
+      <p class="why">Closed is final, as on the web.</p>
+    </div>
+  </div>
+
+  <div class="fx-new">
+    <h3>What following your design needs, besides the screens</h3>
+    <ul>
+      <li><b>The AI agent’s own name per brand</b> (“Callie · AI Agent”). It’s “DavoDesk AI” for everyone today; this is a new brand setting.<span class="tag v1">first version</span></li>
+      <li><b>A notice at the top of the chat</b> (“We’re handling a high volume…”), which the team switches on and off in DavoDesk.<span class="tag v1">first version</span></li>
+      <li><b>A tagline</b> (“Your global money partner”), a new brand setting.<span class="tag v1">first version</span></li>
+      <li><b>A wide logo for the blue header.</b> Your header shows a white wordmark; the logo we just built is one image fitted into a square on a white tile. This means a second upload, “logo for the coloured header”.<span class="tag v1">first version</span></li>
+      <li><b>Voice notes</b> (the microphone). The API takes photos and PDFs; voice needs recording, audio files and a player, in the app and in DavoDesk.<span class="tag later">later</span></li>
+      <li><b>Order ID</b> on the email form. A ticket holds a subject and a message, so for now the Order ID goes into the message as a line. A proper field for the team comes later.<span class="tag later">later</span></li>
+      <li><b>Emoji button and chips:</b> app-side only, nothing new in the API.<span class="tag none">no API work</span></li>
+    </ul>
+  </div>
+</div>
