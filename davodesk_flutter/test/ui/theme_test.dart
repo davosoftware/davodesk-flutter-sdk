@@ -209,6 +209,21 @@ void main() {
       await home.finish(tester);
     });
 
+    testWidgets('the brand name over Home takes the heading font too', (
+      tester,
+    ) async {
+      final home = await pumpPage(
+        tester,
+        HomePage.new,
+        theme: const DavoDeskTheme(
+          fontFamily: 'Inter',
+          headingFontFamily: 'Poppins',
+        ),
+      );
+      expect(fontOf(tester, find.text('Davopay')), 'Poppins');
+      await home.finish(tester);
+    });
+
     testWidgets('headings fall back to the body font', (tester) async {
       final colors = await resolved(
         tester,
