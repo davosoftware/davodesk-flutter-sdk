@@ -22,13 +22,13 @@ class StateChip extends StatelessWidget {
       'pending' => ('Reply', colors.warn, colors.warnSoft),
       'resolved' => ('Solved', colors.ok, colors.okSoft),
       'closed' => ('Closed', colors.ink2, colors.rule),
-      _ => ('Open', colors.accent, colors.accentSoft),
+      _ => ('Open', colors.accentInk, colors.accentSoft),
     };
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color: background,
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: colors.corner(999),
       ),
       child: Text(
         reference == null ? label : '$label · $reference',

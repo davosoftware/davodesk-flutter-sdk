@@ -21,4 +21,7 @@ The signing secret stays on the server. A mobile app never holds it.
 The SDK is optional: everything it does goes through the public DavoDesk API, which a
 developer can call directly instead (`support-api/docs/HOST_APP_INTEGRATION.md`).
 
+The screens can take the app's own look: its colours for light and dark, its fonts and
+square or rounded corners (`DavoDeskTheme`, in the SDK's README under "The look").
+
 The design is in [`docs/specs/`](docs/specs/).

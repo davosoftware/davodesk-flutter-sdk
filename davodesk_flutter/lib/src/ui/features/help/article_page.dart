@@ -68,6 +68,7 @@ class _ArticlePageState extends State<ArticlePage> {
                               article.title,
                               style: TextStyle(
                                 color: colors.ink,
+                                fontFamily: colors.headingFontFamily,
                                 fontSize: 18,
                                 fontWeight: FontWeight.w700,
                               ),

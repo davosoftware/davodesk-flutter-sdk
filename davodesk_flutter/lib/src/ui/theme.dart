@@ -9,13 +9,46 @@ const defaultAccent = Color(0xFF1D4ED8);
 /// How the support screens look, when the app wants a say.
 ///
 /// Without it, the accent is the channel's, light or dark follows the app (an app on
-/// `material_ui`) or the phone, and the font is the app's or the platform's.
+/// `material_ui`) or the phone, the font is the app's or the platform's, and the other
+/// colours are DavoDesk's. [light] and [dark] set the screen colours for each;
+/// [headingFontFamily] sets the titles' font (the body font without it); [corners]
+/// makes the screens square.
 class const DavoDeskTheme({
   final Color? accent,
   final Brightness? brightness,
   final String? fontFamily,
+  final String? headingFontFamily,
+  final DavoDeskColors? light,
+  final DavoDeskColors? dark,
+  final DavoDeskCorners corners = DavoDeskCorners.rounded,
 }) {
   /// Creates a [DavoDeskTheme].
+  this;
+}
+
+/// The corners of cards, fields, bubbles, chips and buttons; avatars stay round.
+enum DavoDeskCorners {
+  /// DavoDesk's rounded corners.
+  rounded,
+
+  /// Square corners.
+  square,
+}
+
+/// The screen colours for light or for dark; a colour left out keeps DavoDesk's.
+///
+/// [background] paints pages and cards; [surface], a shade darker, paints text fields
+/// and Home behind its cards; [text] is the main text, and the quieter text and the
+/// team's chat bubbles follow it; [border] draws lines and edges. [accent] beats
+/// [DavoDeskTheme.accent] in this mode.
+class const DavoDeskColors({
+  final Color? accent,
+  final Color? background,
+  final Color? surface,
+  final Color? text,
+  final Color? border,
+}) {
+  /// Creates a [DavoDeskColors].
   this;
 }
 
@@ -44,6 +77,7 @@ class const SupportColors({
   required final Brightness brightness,
   required final Color accent,
   required final Color accentSoft,
+  required final Color accentInk,
   required final Color onAccent,
   required final Color ink,
   required final Color ink2,
@@ -56,36 +90,65 @@ class const SupportColors({
   required final Color warn,
   required final Color warnSoft,
   final String? fontFamily,
+  final String? headingFontFamily,
+  final DavoDeskCorners corners = DavoDeskCorners.rounded,
 }) {
   /// Creates the colours.
   this;
 
-  /// The mockup's colours for [brightness], around [accent].
+  /// [radius], or none when the app wants square corners.
+  BorderRadius corner(double radius) =>
+      BorderRadius.circular(corners == DavoDeskCorners.square ? 0 : radius);
+
+  /// One corner of [radius], or none when the app wants square corners.
+  Radius bend(double radius) =>
+      Radius.circular(corners == DavoDeskCorners.square ? 0 : radius);
+
+  /// The mockup's colours for [brightness], around [accent], with the app's [own] in
+  /// place of any it sets.
   factory from({
     required Color accent,
     required Brightness brightness,
     String? fontFamily,
+    String? headingFontFamily,
+    DavoDeskColors? own,
+    DavoDeskCorners corners = DavoDeskCorners.rounded,
   }) {
     final dark = brightness == Brightness.dark;
-    final paper = dark ? const Color(0xFF14171D) : const Color(0xFFFFFFFF);
+    final paper =
+        own?.background ??
+        (dark ? const Color(0xFF14171D) : const Color(0xFFFFFFFF));
+    final text = own?.text;
+    final accentSoft = Color.lerp(paper, accent, dark ? 0.3 : 0.1)!;
     return SupportColors(
       brightness: brightness,
       accent: accent,
-      accentSoft: Color.lerp(paper, accent, dark ? 0.3 : 0.1)!,
+      accentSoft: accentSoft,
+      accentInk: _readable(accent, accentSoft, dark: dark),
       onAccent: ThemeData.estimateBrightnessForColor(accent) == Brightness.dark
           ? const Color(0xFFFFFFFF)
           : const Color(0xFF0F172A),
-      ink: dark ? const Color(0xFFE8EBF2) : const Color(0xFF0F172A),
-      ink2: dark ? const Color(0xFFA4ADBF) : const Color(0xFF475569),
-      ink3: dark ? const Color(0xFF6B7487) : const Color(0xFF94A3B8),
-      rule: dark ? const Color(0xFF252A35) : const Color(0xFFE5E7EB),
+      ink: text ?? (dark ? const Color(0xFFE8EBF2) : const Color(0xFF0F172A)),
+      ink2: text != null
+          ? Color.lerp(text, paper, 0.25)!
+          : (dark ? const Color(0xFFA4ADBF) : const Color(0xFF475569)),
+      ink3: text != null
+          ? Color.lerp(text, paper, 0.55)!
+          : (dark ? const Color(0xFF6B7487) : const Color(0xFF94A3B8)),
+      rule:
+          own?.border ??
+          (dark ? const Color(0xFF252A35) : const Color(0xFFE5E7EB)),
       paper: paper,
-      shelf: dark ? const Color(0xFF0B0D12) : const Color(0xFFF5F6F8),
+      shelf:
+          own?.surface ??
+          (dark ? const Color(0xFF0B0D12) : const Color(0xFFF5F6F8)),
       ok: dark ? const Color(0xFF4ADE80) : const Color(0xFF15803D),
       okSoft: dark ? const Color(0xFF10301D) : const Color(0xFFDCFCE7),
       warn: dark ? const Color(0xFFFBBF24) : const Color(0xFFB45309),
       warnSoft: dark ? const Color(0xFF3A2A0C) : const Color(0xFFFEF3C7),
       fontFamily: fontFamily,
+      headingFontFamily: headingFontFamily ?? fontFamily,
+      corners: corners,
     );
   }
 
@@ -97,20 +160,26 @@ class const SupportColors({
     DavoDeskTheme? theme,
   }) {
     final appBrightness = Theme.maybeBrightnessOf(context);
+    final brightness =
+        theme?.brightness ??
+        appBrightness ??
+        MediaQuery.platformBrightnessOf(context);
+    final own = brightness == Brightness.dark ? theme?.dark : theme?.light;
     return SupportColors.from(
       accent:
+          own?.accent ??
           theme?.accent ??
           _hex(config?.appearance?.accentColor) ??
           defaultAccent,
-      brightness:
-          theme?.brightness ??
-          appBrightness ??
-          MediaQuery.platformBrightnessOf(context),
+      brightness: brightness,
+      own: own,
       fontFamily:
           theme?.fontFamily ??
           (appBrightness == null
               ? null
               : Theme.of(context).textTheme.bodyMedium?.fontFamily),
+      headingFontFamily: theme?.headingFontFamily,
+      corners: theme?.corners ?? DavoDeskCorners.rounded,
     );
   }
 
@@ -120,6 +189,22 @@ class const SupportColors({
         .dependOnInheritedWidgetOfExactType<SupportColorsScope>();
     assert(scope != null, 'An SDK piece is outside a SupportShell.');
     return scope!.colors;
+  }
+
+  /// [accent] where it is text, an icon or a dot: made darker (light) or lighter (dark)
+  /// until it reads at 4.5:1 on [on]; fills keep the accent itself.
+  static Color _readable(Color accent, Color on, {required bool dark}) {
+    final toward = dark ? const Color(0xFFFFFFFF) : const Color(0xFF000000);
+    for (var step = 0; step <= 20; step++) {
+      final color = Color.lerp(accent, toward, step / 20)!;
+      if (_contrast(color, on) >= 4.5) return color;
+    }
+    return toward;
+  }
+
+  static double _contrast(Color a, Color b) {
+    final (x, y) = (a.computeLuminance(), b.computeLuminance());
+    return x > y ? (x + 0.05) / (y + 0.05) : (y + 0.05) / (x + 0.05);
   }
 
   static Color? _hex(String? value) {

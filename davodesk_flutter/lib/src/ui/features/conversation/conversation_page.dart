@@ -214,7 +214,7 @@ class _ConversationViewState extends State<ConversationView> {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
             border: Border.all(color: colors.rule),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: colors.corner(12),
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -268,9 +268,11 @@ class _ConversationViewState extends State<ConversationView> {
               OutlinedButton(
                 onPressed: () => widget.onChoose(choice.key),
                 style: OutlinedButton.styleFrom(
-                  shape: const StadiumBorder(),
+                  shape: colors.corners == DavoDeskCorners.square
+                      ? const RoundedRectangleBorder()
+                      : const StadiumBorder(),
                   side: BorderSide(color: colors.accent.withValues(alpha: 0.3)),
-                  foregroundColor: colors.accent,
+                  foregroundColor: colors.accentInk,
                   backgroundColor: colors.paper,
                 ),
                 child: Text(choice.label, textAlign: TextAlign.end),
@@ -331,6 +333,7 @@ class _Header extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         color: colors.ink,
+                        fontFamily: colors.headingFontFamily,
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
                       ),

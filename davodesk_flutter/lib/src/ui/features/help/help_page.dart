@@ -63,7 +63,7 @@ class _HelpPageState extends State<HelpPage> {
                       filled: true,
                       fillColor: colors.shelf,
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: colors.corner(12),
                         borderSide: BorderSide.none,
                       ),
                     ),
@@ -169,9 +169,9 @@ class HelpRow extends StatelessWidget {
               height: 36,
               decoration: BoxDecoration(
                 color: colors.accentSoft,
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: colors.corner(10),
               ),
-              child: Icon(icon, size: 18, color: colors.accent),
+              child: Icon(icon, size: 18, color: colors.accentInk),
             ),
             Expanded(
               child: Column(

@@ -89,7 +89,7 @@ class _ComposerState extends State<Composer> {
       padding: const EdgeInsets.fromLTRB(12, 10, 6, 4),
       decoration: BoxDecoration(
         color: colors.paper,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: colors.corner(16),
         border: Border.all(color: colors.rule),
       ),
       child: Column(

@@ -211,7 +211,7 @@ class _Label extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
                 color: colors.rule.withValues(alpha: 0.6),
-                borderRadius: BorderRadius.circular(4),
+                borderRadius: colors.corner(4),
               ),
               child: Text(
                 'OPTIONAL',
@@ -241,7 +241,7 @@ InputDecoration _decoration(SupportColors colors, String? hint) =>
       isDense: true,
       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: colors.corner(10),
         borderSide: BorderSide.none,
       ),
     );
@@ -332,7 +332,7 @@ class _Note extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: colors.accentSoft,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: colors.corner(12),
         border: Border.all(color: colors.accent.withValues(alpha: 0.25)),
       ),
       child: Row(
@@ -344,7 +344,7 @@ class _Note extends StatelessWidget {
             height: 30,
             decoration: BoxDecoration(
               color: colors.accent,
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: colors.corner(8),
             ),
             child: Icon(Icons.bolt_rounded, size: 18, color: colors.onAccent),
           ),
@@ -378,7 +378,7 @@ class _Banner extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: background,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: SupportColors.of(context).corner(10),
       ),
       child: Text(
         text,

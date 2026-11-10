@@ -37,25 +37,50 @@ class SupportShell extends StatelessWidget {
   );
 }
 
-ThemeData _themeOf(SupportColors colors) => ThemeData(
-  colorScheme: ColorScheme.fromSeed(
-    seedColor: colors.accent,
-    brightness: colors.brightness,
-    primary: colors.accent,
-    onPrimary: colors.onAccent,
-    surface: colors.paper,
-    onSurface: colors.ink,
-    onSurfaceVariant: colors.ink2,
-    outlineVariant: colors.rule,
-  ),
-  fontFamily: colors.fontFamily,
-  scaffoldBackgroundColor: colors.shelf,
-  cardTheme: CardThemeData(
-    color: colors.paper,
-    elevation: 0,
-    margin: EdgeInsets.zero,
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-  ),
-  dividerTheme: DividerThemeData(color: colors.rule, space: 1, thickness: 1),
-  materialTapTargetSize: MaterialTapTargetSize.padded,
-);
+ThemeData _themeOf(SupportColors colors) {
+  // Square corners reach the buttons and sheets too; rounded keeps their own.
+  final square = colors.corners == DavoDeskCorners.square;
+  const squareShape = WidgetStatePropertyAll<OutlinedBorder>(
+    RoundedRectangleBorder(),
+  );
+  return ThemeData(
+    colorScheme: ColorScheme.fromSeed(
+      seedColor: colors.accent,
+      brightness: colors.brightness,
+      primary: colors.accent,
+      onPrimary: colors.onAccent,
+      surface: colors.paper,
+      onSurface: colors.ink,
+      onSurfaceVariant: colors.ink2,
+      outlineVariant: colors.rule,
+    ),
+    fontFamily: colors.fontFamily,
+    scaffoldBackgroundColor: colors.shelf,
+    cardTheme: CardThemeData(
+      color: colors.paper,
+      elevation: 0,
+      margin: EdgeInsets.zero,
+      shape: RoundedRectangleBorder(borderRadius: colors.corner(16)),
+    ),
+    dividerTheme: DividerThemeData(color: colors.rule, space: 1, thickness: 1),
+    filledButtonTheme: FilledButtonThemeData(
+      style: square ? const ButtonStyle(shape: squareShape) : null,
+    ),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: square ? const ButtonStyle(shape: squareShape) : null,
+    ),
+    segmentedButtonTheme: SegmentedButtonThemeData(
+      style: square ? const ButtonStyle(shape: squareShape) : null,
+    ),
+    textButtonTheme: TextButtonThemeData(
+      style: TextButton.styleFrom(
+        foregroundColor: colors.accentInk,
+        shape: square ? const RoundedRectangleBorder() : null,
+      ),
+    ),
+    bottomSheetTheme: square
+        ? const BottomSheetThemeData(shape: RoundedRectangleBorder())
+        : null,
+    materialTapTargetSize: MaterialTapTargetSize.padded,
+  );
+}
