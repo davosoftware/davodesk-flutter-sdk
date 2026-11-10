@@ -106,6 +106,19 @@ void main() {
     },
   );
 
+  testWidgets('a sent form empties, so it is not sent twice', (tester) async {
+    final page = await openEmail(tester);
+    await fill(tester, order: '#VP-8291');
+    await tester.tap(find.text('Send Email'));
+    await tester.pumpAndSettle();
+    expect(find.text('Sent. We’ll reply here and by email.'), findsOneWidget);
+    expect(find.text('Card declined'), findsNothing);
+    expect(find.text('#VP-8291'), findsNothing);
+    expect(find.text('My card…'), findsNothing);
+    expect(sendButton(tester).onPressed, isNull);
+    await page.finish(tester);
+  });
+
   testWidgets('a message added to an open request says which', (tester) async {
     final page = await openEmail(
       tester,

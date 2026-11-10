@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../theme.dart';
@@ -25,7 +26,13 @@ class SupportShell extends StatelessWidget {
     ],
     child: SupportColorsScope(
       colors: colors,
-      child: Theme(data: _themeOf(colors), child: child),
+      // Status bar icons that read on the page; Home sets its own over the accent.
+      child: AnnotatedRegion<SystemUiOverlayStyle>(
+        value: colors.brightness == Brightness.dark
+            ? SystemUiOverlayStyle.light
+            : SystemUiOverlayStyle.dark,
+        child: Theme(data: _themeOf(colors), child: child),
+      ),
     ),
   );
 }

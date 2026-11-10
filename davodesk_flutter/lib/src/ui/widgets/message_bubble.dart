@@ -78,7 +78,9 @@ class MessageBubble extends StatelessWidget {
                           shape: BoxShape.circle,
                         ),
                         child: Text(
-                          label.isEmpty ? '?' : label.characters.first,
+                          label.isEmpty
+                              ? '?'
+                              : label.characters.first.toUpperCase(),
                           style: TextStyle(
                             color: colors.accent,
                             fontSize: 10,

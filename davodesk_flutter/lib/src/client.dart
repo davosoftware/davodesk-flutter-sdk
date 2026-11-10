@@ -67,6 +67,12 @@ class DavoDeskClient {
       if (event case EndedEvent(reason: 'helped' || 'idle')) {
         unawaited(_chat.restart());
       }
+      // A ticket opened or closed: Messages, Home's card and the badge read it.
+      if (event is HandoffEvent ||
+          event is EndedEvent ||
+          event is ResolvedEvent) {
+        unawaited(refreshTickets().catchError((Object _) {}));
+      }
     });
     _lifecycle = AppLifecycleListener(
       binding: WidgetsFlutterBinding.ensureInitialized(),
