@@ -279,5 +279,52 @@ void main() {
       expect(tester.takeException(), isNull);
       await page.finish(tester);
     });
+
+    testWidgets('Subject is as tall as the other boxes', (tester) async {
+      final page = await openContact(tester, api: withSubjects());
+      expect(
+        tester.getSize(find.byKey(const Key('subject'))).height,
+        tester.getSize(find.byKey(const Key('extra'))).height,
+      );
+      await page.finish(tester);
+    });
+
+    // The keyboard opens with the list, since the customer may type their own.
+    testWidgets('with the keyboard up, the whole list shows above it', (
+      tester,
+    ) async {
+      final labels = [
+        'Card declined',
+        'Refund request',
+        'Transfer delayed',
+        'Account access',
+        'Something else',
+      ];
+      final page = await openContact(
+        tester,
+        api: FakeApi()
+          ..configExtras = {
+            'request_subjects': [
+              for (final (i, label) in labels.indexed)
+                {'key': 'rsub_$i', 'label': label},
+            ],
+          },
+      );
+      // As on a phone: the list opens, then the keyboard slides up under it.
+      await openList(tester);
+      const keyboard = 336.0;
+      tester.view.viewInsets = const FakeViewPadding(bottom: keyboard * 3);
+      await tester.pumpAndSettle();
+
+      final keyboardTop = tester.view.physicalSize.height / 3 - keyboard;
+      for (final label in labels) {
+        expect(
+          tester.getRect(option(label)).bottom,
+          lessThanOrEqualTo(keyboardTop),
+          reason: label,
+        );
+      }
+      await page.finish(tester);
+    });
   });
 }

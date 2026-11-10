@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:material_ui/material_ui.dart';
 
 import '../../../domain/models.dart' show RequestSubject;
@@ -282,17 +284,31 @@ class _SubjectField extends StatelessWidget {
   final TextEditingController controller;
   final List<RequestSubject> subjects;
 
+  static const _menuHeight = 280.0;
+
   @override
   Widget build(BuildContext context) {
     final colors = SupportColors.of(context);
+    // Focusing the box scrolls the form up by the list's height, so the keyboard the
+    // customer types into leaves the whole list in view.
+    final listRoom = math.min(16 + 48.0 * subjects.length, _menuHeight) + 20;
     return DropdownMenu<String>(
       controller: controller,
       enableFilter: true,
       requestFocusOnTap: true,
       expandedInsets: EdgeInsets.zero,
-      menuHeight: 280,
+      menuHeight: _menuHeight,
+      scrollPadding: EdgeInsets.fromLTRB(20, 20, 20, listRoom),
       textStyle: TextStyle(color: colors.ink, fontSize: 14),
-      decorationBuilder: (context, menu) => _decoration(colors, _subjectHint),
+      // A plain arrow rather than the default button, so the box keeps the form's height.
+      decorationBuilder: (context, menu) =>
+          _decoration(colors, _subjectHint).copyWith(
+            suffixIcon: Icon(
+              menu.isOpen ? Icons.arrow_drop_up : Icons.arrow_drop_down,
+              color: colors.ink3,
+            ),
+            suffixIconConstraints: const BoxConstraints(minWidth: 40),
+          ),
       menuStyle: MenuStyle(
         backgroundColor: WidgetStatePropertyAll(colors.paper),
       ),
