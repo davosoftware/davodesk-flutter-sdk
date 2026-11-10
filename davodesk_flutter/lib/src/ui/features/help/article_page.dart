@@ -86,12 +86,15 @@ class _ArticlePageState extends State<ArticlePage> {
                               voted: model.voted,
                               onVote: (helpful) => model.vote(helpful: helpful),
                             ),
-                            const SizedBox(height: 16),
-                            const Center(child: PoweredBy()),
                           ],
                         ),
                         _ => const Center(child: CircularProgressIndicator()),
                       },
+                    ),
+                    // Pinned to the bottom of the screen, under what scrolls.
+                    const Padding(
+                      padding: EdgeInsets.only(top: 8, bottom: 10),
+                      child: PoweredBy(),
                     ),
                   ],
                 );
