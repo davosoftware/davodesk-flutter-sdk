@@ -28,12 +28,14 @@ class HeaderLogo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = SupportColors.of(context);
     final name = Text(
       this.name,
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
       style: TextStyle(
-        color: color ?? SupportColors.of(context).ink,
+        color: color ?? colors.ink,
+        fontFamily: colors.headingFontFamily,
         fontSize: height * 0.72,
         fontWeight: FontWeight.w800,
       ),
