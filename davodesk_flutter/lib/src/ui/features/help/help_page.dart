@@ -171,7 +171,7 @@ class HelpRow extends StatelessWidget {
                 color: colors.accentSoft,
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(icon, size: 18, color: colors.accent),
+              child: Icon(icon, size: 18, color: colors.accentInk),
             ),
             Expanded(
               child: Column(

@@ -244,7 +244,7 @@ class _ConversationRow extends StatelessWidget {
                 child: Text(
                   row.initial,
                   style: TextStyle(
-                    color: colors.accent,
+                    color: colors.accentInk,
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
                   ),
@@ -298,7 +298,7 @@ class _ConversationRow extends StatelessWidget {
                     width: 9,
                     height: 9,
                     decoration: BoxDecoration(
-                      color: colors.accent,
+                      color: colors.accentInk,
                       shape: BoxShape.circle,
                     ),
                   ),

@@ -67,7 +67,11 @@ class MessageBubble extends StatelessWidget {
                   spacing: 6,
                   children: [
                     if (item.ai)
-                      Icon(Icons.auto_awesome, size: 14, color: colors.accent)
+                      Icon(
+                        Icons.auto_awesome,
+                        size: 14,
+                        color: colors.accentInk,
+                      )
                     else
                       Container(
                         width: 18,
@@ -82,7 +86,7 @@ class MessageBubble extends StatelessWidget {
                               ? '?'
                               : label.characters.first.toUpperCase(),
                           style: TextStyle(
-                            color: colors.accent,
+                            color: colors.accentInk,
                             fontSize: 10,
                             fontWeight: FontWeight.w700,
                           ),
@@ -188,7 +192,7 @@ class _Tag extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         spacing: 4,
         children: [
-          Icon(icon, size: 13, color: colors.accent),
+          Icon(icon, size: 13, color: colors.accentInk),
           Flexible(
             child: Text(
               text,

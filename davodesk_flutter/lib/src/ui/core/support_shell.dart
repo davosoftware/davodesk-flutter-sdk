@@ -57,5 +57,8 @@ ThemeData _themeOf(SupportColors colors) => ThemeData(
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
   ),
   dividerTheme: DividerThemeData(color: colors.rule, space: 1, thickness: 1),
+  textButtonTheme: TextButtonThemeData(
+    style: TextButton.styleFrom(foregroundColor: colors.accentInk),
+  ),
   materialTapTargetSize: MaterialTapTargetSize.padded,
 );

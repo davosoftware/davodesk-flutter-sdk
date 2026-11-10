@@ -18,4 +18,4 @@ export 'src/domain/chat_events.dart' show ChatConnection;
 export 'src/domain/conversation.dart' show Conversation;
 export 'src/domain/models.dart';
 export 'src/ui/theme.dart'
-    show DavoDeskTheme, DavoDeskContactForm, DavoDeskFormField;
+    show DavoDeskTheme, DavoDeskColors, DavoDeskContactForm, DavoDeskFormField;
