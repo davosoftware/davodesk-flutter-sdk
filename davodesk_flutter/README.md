@@ -51,10 +51,70 @@ Flutter 3.47 or later (Dart 3.13).
 
 ## The look
 
-The screens follow your app's light or dark setting (the phone's, when your app uses the
-framework's Material rather than `material_ui`), use the channel's accent colour, and run
-on your app's navigator as full-screen pages. `DavoDeskTheme` overrides the accent, the
-brightness or the font.
+The screens run on your app's navigator as full-screen pages. Out of the box they follow
+your app's light or dark setting (the phone's, when your app uses the framework's Material
+rather than `material_ui`), take the accent colour set for the channel in DavoDesk, and use
+DavoDesk's own greys.
+
+To make them match your app, pass a `DavoDeskTheme` to `DavoDesk.initialize`:
+
+```dart
+await DavoDesk.initialize(
+  channelId: 'ch_…',
+  identityToken: () => myBackend.fetchDavoDeskIdentityToken(),
+  theme: const DavoDeskTheme(
+    accent: Color(0xFF2F6B3F),
+    light: DavoDeskColors(
+      background: Color(0xFFF6F8F4),
+      surface: Color(0xFFE9EEE6),
+      text: Color(0xFF14261C),
+      border: Color(0xFFD6DECF),
+    ),
+    dark: DavoDeskColors(
+      accent: Color(0xFF6FCF8F),
+      background: Color(0xFF0F1A14),
+      surface: Color(0xFF0A120E),
+      text: Color(0xFFE3EDE6),
+      border: Color(0xFF22352A),
+    ),
+    fontFamily: 'Inter',
+    headingFontFamily: 'Poppins',
+    corners: DavoDeskCorners.square,
+  ),
+);
+```
+
+| `DavoDeskTheme` | What it sets |
+|---|---|
+| `accent` | Buttons, the Home header, your customer's chat bubbles, links and icons. It beats the accent set in DavoDesk. |
+| `brightness` | Light or dark, whatever the app or the phone says. |
+| `light`, `dark` | The screen colours for each, as `DavoDeskColors` (below). |
+| `fontFamily` | All the text. Without it, your app's font (an app on `material_ui`) or the platform's. |
+| `headingFontFamily` | Page titles, the Home greeting, an article's title and empty states. Without it, `fontFamily`. |
+| `corners` | `DavoDeskCorners.rounded` (the default) or `DavoDeskCorners.square`, for cards, fields, chat bubbles, labels and buttons. Avatars stay round. |
+
+| `DavoDeskColors` | What it paints |
+|---|---|
+| `background` | Pages and cards. |
+| `surface` | Text fields, and Home behind its cards: a shade darker than `background`. |
+| `text` | The main text. The quieter text (times, hints) and the team's chat bubbles follow it. |
+| `border` | Lines and the edges of cards. |
+| `accent` | The accent in this mode only; it beats `DavoDeskTheme.accent`. A lighter one usually suits dark. |
+
+A colour you leave out keeps DavoDesk's, so set `background`, `surface` and `border` together.
+
+- **Fonts.** Add the font to your app first (the `fonts:` section of your `pubspec.yaml`),
+  then pass its family name. A Google font works too, through the `google_fonts` package:
+  `GoogleFonts.inter().fontFamily`.
+- **An accent that reads.** Where the accent is text or an icon (links, the Open label, row
+  icons, unread dots), the SDK darkens it on light screens or lightens it on dark ones until
+  it reads at 4.5:1. Fills (buttons, the Home header, your customer's bubbles) keep your
+  colour exactly.
+- **What stays DavoDesk's.** The green and amber of the Solved and Reply labels, so a
+  ticket's state reads the same in every app. Text size follows the phone's accessibility
+  setting.
+- **Which wins.** `DavoDeskTheme` in your code, then the accent set in DavoDesk, then
+  DavoDesk's blue.
 
 ## Platform setup
 
