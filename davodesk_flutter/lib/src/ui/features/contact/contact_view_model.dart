@@ -6,10 +6,10 @@ import '../../../domain/models.dart';
 
 final _log = Logger('DavoDesk');
 
-/// The email form's state: sending, the ticket it raised, or a refusal.
-class EmailViewModel extends ChangeNotifier {
+/// The contact form's state: sending, the ticket it raised, or a refusal.
+class ContactViewModel extends ChangeNotifier {
   /// Creates the view model over [_client].
-  EmailViewModel(this._client);
+  ContactViewModel(this._client);
 
   final DavoDeskClient _client;
   bool _sending = false;
@@ -44,7 +44,7 @@ class EmailViewModel extends ChangeNotifier {
         extraValue: extraValue,
       );
     } on Object catch (error) {
-      _log.fine('The email form was refused: $error');
+      _log.fine('The contact form was refused: $error');
       _failed = true;
     }
     _sending = false;

@@ -314,7 +314,7 @@ class const CustomerTicket({
   String get status => summary.status;
 }
 
-/// A ticket raised from the email form; [resumed] means it was added to an open one.
+/// A ticket raised from the contact form; [resumed] means it was added to an open one.
 class const RaisedTicket(final bool resumed, final CustomerTicket ticket) {
   /// Creates a [RaisedTicket].
   this;

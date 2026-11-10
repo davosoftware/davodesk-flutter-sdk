@@ -4,23 +4,22 @@ import '../../core/scope.dart';
 import '../../theme.dart';
 import '../../widgets/page_bar.dart';
 import '../../words.dart';
-import 'email_view_model.dart';
+import 'contact_view_model.dart';
 
-/// Email Support: raises a ticket without chat; the reply comes to Messages and by
-/// email.
-class EmailPage extends StatefulWidget {
+/// Send us a message: raises a ticket without chat; the reply comes to Messages.
+class ContactPage extends StatefulWidget {
   /// Creates the form.
-  const EmailPage({super.key});
+  const ContactPage({super.key});
 
   @override
-  State<EmailPage> createState() => _EmailPageState();
+  State<ContactPage> createState() => _ContactPageState();
 }
 
-class _EmailPageState extends State<EmailPage> {
+class _ContactPageState extends State<ContactPage> {
   final _subject = TextEditingController();
   final _extra = TextEditingController();
   final _message = TextEditingController();
-  EmailViewModel? _model;
+  ContactViewModel? _model;
 
   @override
   void initState() {
@@ -33,7 +32,7 @@ class _EmailPageState extends State<EmailPage> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _model ??= EmailViewModel(SupportScope.of(context).client);
+    _model ??= ContactViewModel(SupportScope.of(context).client);
   }
 
   @override
@@ -50,7 +49,7 @@ class _EmailPageState extends State<EmailPage> {
     final raised = await _model!.send(
       subject: _subject.text,
       message: _message.text,
-      extraLabel: scope.emailForm?.extraField?.label,
+      extraLabel: scope.contactForm?.extraField?.label,
       extraValue: _extra.text,
     );
     if (raised != null && mounted) {
@@ -68,7 +67,7 @@ class _EmailPageState extends State<EmailPage> {
     final scope = SupportScope.of(context);
     final colors = SupportColors.of(context);
     final model = _model!;
-    final form = scope.emailForm;
+    final form = scope.contactForm;
     final note = form?.note;
     final extra = form?.extraField;
     return Scaffold(
@@ -80,7 +79,7 @@ class _EmailPageState extends State<EmailPage> {
             child: Column(
               children: [
                 PageBar(
-                  title: 'Email Support',
+                  title: 'Send us a message',
                   centered: true,
                   onBack: () => Navigator.maybePop(context),
                 ),
@@ -95,15 +94,6 @@ class _EmailPageState extends State<EmailPage> {
                       return ListView(
                         padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
                         children: [
-                          Text(
-                            'Email Us',
-                            style: TextStyle(
-                              color: colors.ink,
-                              fontSize: 18,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
                           Text(
                             'Have a question about your order or our services? '
                             'Our team is here to help.',
@@ -122,7 +112,7 @@ class _EmailPageState extends State<EmailPage> {
                               text: raised.resumed
                                   ? 'Added to your open request '
                                         '${referenceOf(raised.ticket.id)}'
-                                  : 'Sent. We’ll reply here and by email.',
+                                  : 'Sent. We’ll reply in Messages.',
                               color: colors.ok,
                               background: colors.okSoft,
                             ),
@@ -165,7 +155,7 @@ class _EmailPageState extends State<EmailPage> {
                             style: FilledButton.styleFrom(
                               minimumSize: const Size.fromHeight(48),
                             ),
-                            child: const Text('Send Email'),
+                            child: const Text('Send'),
                           ),
                         ],
                       );

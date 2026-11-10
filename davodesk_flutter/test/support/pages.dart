@@ -45,7 +45,7 @@ Future<PageHarness> pumpPage(
   double textScale = 1,
   void Function(DavoDeskClient client)? before,
   Future<UploadFile?> Function(AttachFrom from)? pickAttachment,
-  DavoDeskEmailForm? emailForm,
+  DavoDeskContactForm? contactForm,
 }) async {
   tester.view
     ..physicalSize = const Size(1170, 2532)
@@ -65,7 +65,7 @@ Future<PageHarness> pumpPage(
         config: config,
         go: (_, place) => harness.went.add(place),
         pickAttachment: pickAttachment,
-        emailForm: emailForm,
+        contactForm: contactForm,
         openLink: (url) async {
           harness.links.add(url);
           return true;

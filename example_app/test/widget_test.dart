@@ -86,7 +86,7 @@ void main() {
     expect(find.text('Hi Ada'), findsOneWidget);
     expect(find.text('Help'), findsOneWidget);
     expect(find.text('Ask about my order'), findsOneWidget);
-    expect(find.text('Email us'), findsOneWidget);
+    expect(find.text('Send us a message'), findsOneWidget);
     expect(calls, contains('GET /support/identity'));
 
     await tester.tap(find.text('Sign out'));

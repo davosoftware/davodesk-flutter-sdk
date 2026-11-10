@@ -213,7 +213,7 @@ class DavoDeskClient {
   Future<CustomerTicket> reopen(String ticketId) =>
       _authed((token) => _api.reopen(token, ticketId));
 
-  /// Raises a ticket from the email form, or adds to the customer's open one.
+  /// Raises a ticket from the contact form, or adds to the customer's open one.
   ///
   /// A filled-in extra field goes first in the message, as "[extraLabel]: [extraValue]".
   /// Each call is one request with its own idempotency key, kept for the retries when an

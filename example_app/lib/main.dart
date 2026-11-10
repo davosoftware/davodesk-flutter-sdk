@@ -11,7 +11,7 @@ typedef StartSupport = Future<void> Function({
   required Future<String?> Function() identityToken,
 });
 
-/// DavoDesk for Acme, with an email form asking for an order number; the screens take
+/// DavoDesk for Acme, with a contact form asking for an order number; the screens take
 /// the channel's accent.
 Future<void> startDavoDesk({
   required String channelId,
@@ -21,8 +21,8 @@ Future<void> startDavoDesk({
   channelId: channelId,
   apiUrl: apiUrl,
   identityToken: identityToken,
-  emailForm: const DavoDeskEmailForm(
-    note: 'We typically respond to all email inquiries within 24 hours.',
+  contactForm: const DavoDeskContactForm(
+    note: 'We typically respond within 24 hours.',
     extraField: DavoDeskFormField(label: 'Order ID', hint: 'e.g. #VP-8291'),
   ),
 );

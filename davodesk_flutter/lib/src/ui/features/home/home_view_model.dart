@@ -28,7 +28,7 @@ class const HomeState({
   final String? firstName,
   final bool showMessages = true,
   final bool showHelp = false,
-  final bool showEmail = true,
+  final bool showContact = true,
   final List<HomeLink> links = const [],
   final RecentCard? recent,
   final bool failed = false,
@@ -105,7 +105,7 @@ class HomeViewModel extends ChangeNotifier {
     firstName: firstNameOf(_client.customerName),
     showMessages: !_config.answersOnly,
     showHelp: _hasHelp,
-    showEmail: !_config.answersOnly,
+    showContact: !_config.answersOnly,
     links: [
       for (final link in _config.appearance?.homeLinks ?? const <HomeLink>[])
         if (isWebLink(link.url)) link,

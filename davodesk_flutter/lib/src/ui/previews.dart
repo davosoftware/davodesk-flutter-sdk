@@ -8,9 +8,9 @@ import '../client.dart';
 import '../domain/models.dart';
 import 'core/scope.dart';
 import 'core/support_shell.dart';
+import 'features/contact/contact_page.dart';
 import 'features/conversation/conversation_page.dart';
 import 'features/conversation/conversation_view_model.dart';
-import 'features/email/email_page.dart';
 import 'features/help/help_page.dart';
 import 'features/home/home_page.dart';
 import 'features/home/home_view_model.dart';
@@ -270,7 +270,7 @@ Widget _help(Brightness brightness) => _screen(
   ),
 );
 
-Widget _email(Brightness brightness) => SupportScope(
+Widget _contact(Brightness brightness) => SupportScope(
   // An idle client: the form calls nothing until Send.
   client: DavoDeskClient(channelId: 'preview', identityToken: () async => null),
   config: const ChannelConfig(
@@ -280,20 +280,20 @@ Widget _email(Brightness brightness) => SupportScope(
     supportMode: 'ai_triage',
   ),
   go: (_, _) {},
-  emailForm: const DavoDeskEmailForm(
-    note: 'We typically respond to all email inquiries within 24 hours.',
+  contactForm: const DavoDeskContactForm(
+    note: 'We typically respond within 24 hours.',
     extraField: DavoDeskFormField(label: 'Order ID', hint: 'e.g. #VP-8291'),
   ),
-  child: _screen(brightness, const EmailPage()),
+  child: _screen(brightness, const ContactPage()),
 );
 
-/// Email Support, light.
-@Preview(group: 'Email', name: 'Light')
-Widget emailLight() => _email(Brightness.light);
+/// Send us a message, light.
+@Preview(group: 'Send us a message', name: 'Light')
+Widget contactLight() => _contact(Brightness.light);
 
-/// Email Support, dark.
-@Preview(group: 'Email', name: 'Dark')
-Widget emailDark() => _email(Brightness.dark);
+/// Send us a message, dark.
+@Preview(group: 'Send us a message', name: 'Dark')
+Widget contactDark() => _contact(Brightness.dark);
 
 /// A ticket asking for a rating, light.
 @Preview(group: 'Ticket', name: 'Light')

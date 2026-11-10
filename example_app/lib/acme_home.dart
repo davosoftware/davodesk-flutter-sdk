@@ -65,8 +65,9 @@ class AcmeHome extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             OutlinedButton(
-              onPressed: () => DavoDesk.show(context, page: DavoDeskPage.email),
-              child: const Text('Email us'),
+              onPressed: () =>
+                  DavoDesk.show(context, page: DavoDeskPage.contact),
+              child: const Text('Send us a message'),
             ),
             const SizedBox(height: 24),
             TextButton(
