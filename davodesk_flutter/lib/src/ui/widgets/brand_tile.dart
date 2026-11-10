@@ -46,7 +46,7 @@ class BrandTile extends StatelessWidget {
         clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
           color: const Color(0xFFFFFFFF),
-          borderRadius: BorderRadius.circular(size * 0.28),
+          borderRadius: colors.corner(size * 0.28),
           border: Border.all(color: colors.rule),
         ),
         child: ExcludeSemantics(

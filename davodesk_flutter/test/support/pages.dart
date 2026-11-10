@@ -37,7 +37,7 @@ class PageHarness {
   }
 }
 
-/// Pumps [page] on a phone-sized screen at [textScale], over [api].
+/// Pumps [page] on a phone-sized screen at [textScale], over [api], in the app's [theme].
 Future<PageHarness> pumpPage(
   WidgetTester tester,
   Widget Function() page, {
@@ -46,6 +46,7 @@ Future<PageHarness> pumpPage(
   void Function(DavoDeskClient client)? before,
   Future<UploadFile?> Function(AttachFrom from)? pickAttachment,
   DavoDeskContactForm? contactForm,
+  DavoDeskTheme? theme,
 }) async {
   tester.view
     ..physicalSize = const Size(1170, 2532)
@@ -72,7 +73,11 @@ Future<PageHarness> pumpPage(
         },
         child: Builder(
           builder: (context) => SupportShell(
-            colors: SupportColors.resolve(context, config: config),
+            colors: SupportColors.resolve(
+              context,
+              config: config,
+              theme: theme,
+            ),
             child: page(),
           ),
         ),

@@ -237,7 +237,7 @@ class _RatingCardState extends State<_RatingCard> {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: colors.corner(16),
         border: Border.all(color: colors.rule),
       ),
       child: Column(

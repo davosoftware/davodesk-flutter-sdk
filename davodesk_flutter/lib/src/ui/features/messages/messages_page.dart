@@ -162,6 +162,7 @@ class _Bar extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   color: colors.ink,
+                  fontFamily: colors.headingFontFamily,
                   fontSize: 15,
                   fontWeight: FontWeight.w700,
                 ),
@@ -195,6 +196,7 @@ class _Empty extends StatelessWidget {
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: colors.ink,
+                fontFamily: colors.headingFontFamily,
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
               ),

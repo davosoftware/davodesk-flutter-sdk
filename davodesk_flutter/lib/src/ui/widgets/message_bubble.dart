@@ -36,11 +36,11 @@ class MessageBubble extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
             decoration: BoxDecoration(
               color: colors.accent,
-              borderRadius: const BorderRadiusDirectional.only(
-                topStart: Radius.circular(14),
-                topEnd: Radius.circular(4),
-                bottomStart: Radius.circular(14),
-                bottomEnd: Radius.circular(14),
+              borderRadius: BorderRadiusDirectional.only(
+                topStart: colors.bend(14),
+                topEnd: colors.bend(4),
+                bottomStart: colors.bend(14),
+                bottomEnd: colors.bend(14),
               ),
             ),
             child: Text(
@@ -123,11 +123,11 @@ class MessageBubble extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
               decoration: BoxDecoration(
                 color: Color.lerp(colors.paper, colors.ink, dark ? 0.08 : 0.05),
-                borderRadius: const BorderRadiusDirectional.only(
-                  topStart: Radius.circular(4),
-                  topEnd: Radius.circular(14),
-                  bottomStart: Radius.circular(14),
-                  bottomEnd: Radius.circular(14),
+                borderRadius: BorderRadiusDirectional.only(
+                  topStart: colors.bend(4),
+                  topEnd: colors.bend(14),
+                  bottomStart: colors.bend(14),
+                  bottomEnd: colors.bend(14),
                 ),
               ),
               child: Column(
@@ -185,7 +185,7 @@ class _Tag extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: colors.paper,
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: colors.corner(999),
         border: Border.all(color: colors.rule),
       ),
       child: Row(
@@ -206,10 +206,6 @@ class _Tag extends StatelessWidget {
     );
     return onTap == null
         ? tag
-        : InkWell(
-            onTap: onTap,
-            borderRadius: BorderRadius.circular(999),
-            child: tag,
-          );
+        : InkWell(onTap: onTap, borderRadius: colors.corner(999), child: tag);
   }
 }

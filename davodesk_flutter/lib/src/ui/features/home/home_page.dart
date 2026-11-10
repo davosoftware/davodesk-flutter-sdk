@@ -231,6 +231,7 @@ class _Header extends StatelessWidget {
     final colors = SupportColors.of(context);
     final greeting = TextStyle(
       color: colors.onAccent,
+      fontFamily: colors.headingFontFamily,
       fontSize: 21,
       height: 1.3,
       fontWeight: FontWeight.w800,
@@ -287,7 +288,7 @@ class _Card extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         color: colors.paper,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: colors.corner(16),
         border: dark ? Border.all(color: colors.rule) : null,
         boxShadow: dark
             ? null
@@ -307,7 +308,7 @@ class _Card extends StatelessWidget {
       child: Material(
         type: MaterialType.transparency,
         clipBehavior: Clip.antiAlias,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: colors.corner(16),
         child: child,
       ),
     );

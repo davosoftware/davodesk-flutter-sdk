@@ -10,23 +10,36 @@ const defaultAccent = Color(0xFF1D4ED8);
 ///
 /// Without it, the accent is the channel's, light or dark follows the app (an app on
 /// `material_ui`) or the phone, the font is the app's or the platform's, and the other
-/// colours are DavoDesk's. [light] and [dark] set the screen colours for each.
+/// colours are DavoDesk's. [light] and [dark] set the screen colours for each;
+/// [headingFontFamily] sets the titles' font (the body font without it); [corners]
+/// makes the screens square.
 class const DavoDeskTheme({
   final Color? accent,
   final Brightness? brightness,
   final String? fontFamily,
+  final String? headingFontFamily,
   final DavoDeskColors? light,
   final DavoDeskColors? dark,
+  final DavoDeskCorners corners = DavoDeskCorners.rounded,
 }) {
   /// Creates a [DavoDeskTheme].
   this;
 }
 
+/// The corners of cards, fields, bubbles, chips and buttons; avatars stay round.
+enum DavoDeskCorners {
+  /// DavoDesk's rounded corners.
+  rounded,
+
+  /// Square corners.
+  square,
+}
+
 /// The screen colours for light or for dark; a colour left out keeps DavoDesk's.
 ///
-/// [background] paints pages and cards; [surface], a shade darker, paints text fields,
-/// the team's chat bubbles and the space behind Home's cards; [text] is the main text,
-/// and the quieter text follows it; [border] draws lines and edges. [accent] beats
+/// [background] paints pages and cards; [surface], a shade darker, paints text fields
+/// and Home behind its cards; [text] is the main text, and the quieter text and the
+/// team's chat bubbles follow it; [border] draws lines and edges. [accent] beats
 /// [DavoDeskTheme.accent] in this mode.
 class const DavoDeskColors({
   final Color? accent,
@@ -77,9 +90,19 @@ class const SupportColors({
   required final Color warn,
   required final Color warnSoft,
   final String? fontFamily,
+  final String? headingFontFamily,
+  final DavoDeskCorners corners = DavoDeskCorners.rounded,
 }) {
   /// Creates the colours.
   this;
+
+  /// [radius], or none when the app wants square corners.
+  BorderRadius corner(double radius) =>
+      BorderRadius.circular(corners == DavoDeskCorners.square ? 0 : radius);
+
+  /// One corner of [radius], or none when the app wants square corners.
+  Radius bend(double radius) =>
+      Radius.circular(corners == DavoDeskCorners.square ? 0 : radius);
 
   /// The mockup's colours for [brightness], around [accent], with the app's [own] in
   /// place of any it sets.
@@ -87,7 +110,9 @@ class const SupportColors({
     required Color accent,
     required Brightness brightness,
     String? fontFamily,
+    String? headingFontFamily,
     DavoDeskColors? own,
+    DavoDeskCorners corners = DavoDeskCorners.rounded,
   }) {
     final dark = brightness == Brightness.dark;
     final paper =
@@ -122,6 +147,8 @@ class const SupportColors({
       warn: dark ? const Color(0xFFFBBF24) : const Color(0xFFB45309),
       warnSoft: dark ? const Color(0xFF3A2A0C) : const Color(0xFFFEF3C7),
       fontFamily: fontFamily,
+      headingFontFamily: headingFontFamily ?? fontFamily,
+      corners: corners,
     );
   }
 
@@ -151,6 +178,8 @@ class const SupportColors({
           (appBrightness == null
               ? null
               : Theme.of(context).textTheme.bodyMedium?.fontFamily),
+      headingFontFamily: theme?.headingFontFamily,
+      corners: theme?.corners ?? DavoDeskCorners.rounded,
     );
   }
 

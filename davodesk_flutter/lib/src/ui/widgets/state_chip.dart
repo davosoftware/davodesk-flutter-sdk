@@ -28,7 +28,7 @@ class StateChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color: background,
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: colors.corner(999),
       ),
       child: Text(
         reference == null ? label : '$label · $reference',
