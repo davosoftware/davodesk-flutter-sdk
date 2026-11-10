@@ -113,18 +113,24 @@ class DavoDeskApi {
 
   /// Raises a ticket, or adds to the open one (then [RaisedTicket.resumed] is true).
   ///
-  /// The same [idempotencyKey] on a retry never adds the message twice.
+  /// The same [idempotencyKey] on a retry never adds the message twice. [subjectKey]
+  /// names one of the brand's request subjects.
   Future<RaisedTicket> raiseTicket(
     String token, {
     required String subject,
     required String message,
     required String idempotencyKey,
+    String? subjectKey,
   }) async {
     final json = await _call(
       'POST',
       '/v1/tickets/me',
       token: token,
-      body: {'subject': subject, 'message': message},
+      body: {
+        'subject': subject,
+        'message': message,
+        'subject_key': ?subjectKey,
+      },
       headers: {'Idempotency-Key': idempotencyKey},
     );
     return RaisedTicket(

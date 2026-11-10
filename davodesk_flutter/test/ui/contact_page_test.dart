@@ -170,4 +170,114 @@ void main() {
     expect(tester.takeException(), isNull);
     await page.finish(tester);
   });
+
+  testWidgets('without the brand’s subjects, Subject is a plain box', (
+    tester,
+  ) async {
+    final page = await openContact(tester);
+    expect(find.byType(DropdownMenu<String>), findsNothing);
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('subject')),
+        matching: find.byType(TextField),
+        matchRoot: true,
+      ),
+      findsOneWidget,
+    );
+    await page.finish(tester);
+  });
+
+  group('with the brand’s subjects', () {
+    FakeApi withSubjects() => FakeApi()
+      ..configExtras = {
+        'request_subjects': [
+          {'key': 'rsub_declined', 'label': 'Card declined'},
+          {'key': 'rsub_refunds', 'label': 'Refunds'},
+        ],
+      };
+
+    Finder option(String label) =>
+        find.widgetWithText(MenuItemButton, label).hitTestable();
+
+    Future<void> openList(WidgetTester tester) async {
+      await tester.tap(find.byKey(const Key('subject')));
+      await tester.pumpAndSettle();
+    }
+
+    Future<void> send(WidgetTester tester) async {
+      await tester.enterText(find.byKey(const Key('message')), 'My card…');
+      await tester.pump();
+      await tester.tap(find.text('Send'));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('tapping Subject offers them, and a pick sends its key', (
+      tester,
+    ) async {
+      final page = await openContact(tester, api: withSubjects());
+      await openList(tester);
+      expect(option('Card declined'), findsOneWidget);
+      expect(option('Refunds'), findsOneWidget);
+
+      await tester.tap(option('Refunds'));
+      await tester.pumpAndSettle();
+      await send(tester);
+
+      expect(page.api.raised.single.body, {
+        'subject': 'Refunds',
+        'message': 'My card…',
+        'subject_key': 'rsub_refunds',
+      });
+      await page.finish(tester);
+    });
+
+    testWidgets('a subject of the customer’s own sends no key', (tester) async {
+      final page = await openContact(tester, api: withSubjects());
+      await tester.enterText(
+        find.byKey(const Key('subject')),
+        'My card was swallowed',
+      );
+      await send(tester);
+
+      expect(page.api.raised.single.body, {
+        'subject': 'My card was swallowed',
+        'message': 'My card…',
+      });
+      await page.finish(tester);
+    });
+
+    testWidgets('a pick edited afterwards sends no key', (tester) async {
+      final page = await openContact(tester, api: withSubjects());
+      await openList(tester);
+      await tester.tap(option('Card declined'));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(const Key('subject')),
+        'Card declined twice',
+      );
+      await send(tester);
+
+      expect(page.api.raised.single.body, {
+        'subject': 'Card declined twice',
+        'message': 'My card…',
+      });
+      await page.finish(tester);
+    });
+
+    testWidgets('nothing overflows at 200 % text with the list open', (
+      tester,
+    ) async {
+      final page = await pumpPage(
+        tester,
+        ContactPage.new,
+        api: withSubjects(),
+        contactForm: davopay,
+        textScale: 2,
+      );
+      await openList(tester);
+      expect(option('Refunds'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      await page.finish(tester);
+    });
+  });
 }

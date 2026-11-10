@@ -109,6 +109,24 @@ void main() {
     expect(raised.ticket.subject, 'Refund for order #4471');
   });
 
+  test('raises with the brand’s subject key when one is given', () async {
+    final (api, requests) = apiWith(
+      (_) => json({'resumed': false, 'ticket': ticketJson()}),
+    );
+    await api.raiseTicket(
+      's1',
+      subject: 'Card declined',
+      message: 'My card…',
+      idempotencyKey: 'key-1',
+      subjectKey: 'rsub_1',
+    );
+    expect(jsonDecode(requests.single.body), {
+      'subject': 'Card declined',
+      'message': 'My card…',
+      'subject_key': 'rsub_1',
+    });
+  });
+
   test(
     'turns a refusal into DavoDeskApiError with code and Retry-After',
     () async {
@@ -156,8 +174,31 @@ void main() {
       expect(config.tagline, 'Your global money partner');
       expect(config.chatNotice, 'We’re busy today.');
       expect(config.appearance, isNull);
+      expect(config.requestSubjects, isEmpty);
     },
   );
+
+  test('reads the request subjects, skipping one without its words', () async {
+    final (api, _) = apiWith(
+      (_) => json({
+        'channel_id': 'ch_1',
+        'brand_name': 'Davopay',
+        'request_subjects': [
+          {'key': 'rsub_1', 'label': 'Card declined'},
+          {'key': 'rsub_2'},
+          {'key': 'rsub_3', 'label': 'Refunds'},
+        ],
+      }),
+    );
+    final config = await api.config('ch_1');
+    expect(
+      [
+        for (final subject in config.requestSubjects)
+          (subject.key, subject.label),
+      ],
+      [('rsub_1', 'Card declined'), ('rsub_3', 'Refunds')],
+    );
+  });
 
   test('tolerates a ticket message without chat-only fields', () async {
     final (api, _) = apiWith(

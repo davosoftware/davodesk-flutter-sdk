@@ -216,13 +216,15 @@ class DavoDeskClient {
   /// Raises a ticket from the contact form, or adds to the customer's open one.
   ///
   /// A filled-in extra field goes first in the message, as "[extraLabel]: [extraValue]".
-  /// Each call is one request with its own idempotency key, kept for the retries when an
-  /// answer is lost in transit (the integration guide, §8).
+  /// [subjectKey] is the key of one of [ChannelConfig.requestSubjects], sent while
+  /// [subject] is its label. Each call is one request with its own idempotency key, kept
+  /// for the retries when an answer is lost in transit (the integration guide, §8).
   Future<RaisedTicket> raiseTicket({
     required String subject,
     required String message,
     String? extraLabel,
     String? extraValue,
+    String? subjectKey,
   }) async {
     final extra = extraValue?.trim() ?? '';
     final label = extraLabel?.trim() ?? '';
@@ -239,6 +241,7 @@ class DavoDeskClient {
           subject: subject,
           message: body,
           idempotencyKey: key,
+          subjectKey: subjectKey,
         ),
       ),
     );

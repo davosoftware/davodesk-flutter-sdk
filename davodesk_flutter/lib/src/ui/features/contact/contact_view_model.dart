@@ -26,22 +26,30 @@ class ContactViewModel extends ChangeNotifier {
   RaisedTicket? get raised => _raised;
 
   /// Raises the ticket, once per tap however fast they come: one idempotency key each.
+  ///
+  /// The subject carries its key from [subjects] only while it is that subject's label.
   Future<RaisedTicket?> send({
     required String subject,
     required String message,
     String? extraLabel,
     String? extraValue,
+    List<RequestSubject> subjects = const [],
   }) async {
     if (_sending) return null;
     _sending = true;
     _failed = false;
     notifyListeners();
+    final typed = subject.trim();
     try {
       _raised = await _client.raiseTicket(
-        subject: subject.trim(),
+        subject: typed,
         message: message.trim(),
         extraLabel: extraLabel,
         extraValue: extraValue,
+        subjectKey: subjects
+            .where((each) => each.label == typed)
+            .firstOrNull
+            ?.key,
       );
     } on Object catch (error) {
       _log.fine('The contact form was refused: $error');

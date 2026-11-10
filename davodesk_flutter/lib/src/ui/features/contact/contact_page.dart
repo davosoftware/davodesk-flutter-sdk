@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 
+import '../../../domain/models.dart' show RequestSubject;
 import '../../core/scope.dart';
 import '../../theme.dart';
 import '../../widgets/page_bar.dart';
@@ -51,6 +52,7 @@ class _ContactPageState extends State<ContactPage> {
       message: _message.text,
       extraLabel: scope.contactForm?.extraField?.label,
       extraValue: _extra.text,
+      subjects: scope.config.requestSubjects,
     );
     if (raised != null && mounted) {
       // Sent: an emptied form can't send the same message twice.
@@ -127,11 +129,19 @@ class _ContactPageState extends State<ContactPage> {
                           ],
                           const SizedBox(height: 16),
                           const _Label('Subject'),
-                          _Field(
-                            key: const Key('subject'),
-                            controller: _subject,
-                            hint: 'What can we help you with?',
-                          ),
+                          if (scope.config.requestSubjects case final subjects
+                              when subjects.isNotEmpty)
+                            _SubjectField(
+                              key: const Key('subject'),
+                              controller: _subject,
+                              subjects: subjects,
+                            )
+                          else
+                            _Field(
+                              key: const Key('subject'),
+                              controller: _subject,
+                              hint: _subjectHint,
+                            ),
                           if (extra != null) ...[
                             const SizedBox(height: 12),
                             _Label(extra.label, optional: true),
@@ -217,6 +227,23 @@ class _Label extends StatelessWidget {
   }
 }
 
+const _subjectHint = 'What can we help you with?';
+
+/// The form's own look for a text box.
+InputDecoration _decoration(SupportColors colors, String? hint) =>
+    InputDecoration(
+      hintText: hint,
+      hintStyle: TextStyle(color: colors.ink3, fontSize: 13.5),
+      filled: true,
+      fillColor: colors.shelf,
+      isDense: true,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: BorderSide.none,
+      ),
+    );
+
 class _Field extends StatelessWidget {
   const _Field({
     super.key,
@@ -238,21 +265,41 @@ class _Field extends StatelessWidget {
       maxLines: lines == 1 ? 1 : 8,
       textCapitalization: TextCapitalization.sentences,
       style: TextStyle(color: colors.ink, fontSize: 14),
-      decoration: InputDecoration(
-        hintText: hint,
-        hintStyle: TextStyle(color: colors.ink3, fontSize: 13.5),
-        filled: true,
-        fillColor: colors.shelf,
-        isDense: true,
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 12,
-          vertical: 12,
-        ),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide.none,
-        ),
+      decoration: _decoration(colors, hint),
+    );
+  }
+}
+
+/// Subject with the brand's subjects to pick from, filtered as the customer types; their
+/// own words are as welcome.
+class _SubjectField extends StatelessWidget {
+  const _SubjectField({
+    super.key,
+    required this.controller,
+    required this.subjects,
+  });
+
+  final TextEditingController controller;
+  final List<RequestSubject> subjects;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = SupportColors.of(context);
+    return DropdownMenu<String>(
+      controller: controller,
+      enableFilter: true,
+      requestFocusOnTap: true,
+      expandedInsets: EdgeInsets.zero,
+      menuHeight: 280,
+      textStyle: TextStyle(color: colors.ink, fontSize: 14),
+      decorationBuilder: (context, menu) => _decoration(colors, _subjectHint),
+      menuStyle: MenuStyle(
+        backgroundColor: WidgetStatePropertyAll(colors.paper),
       ),
+      dropdownMenuEntries: [
+        for (final subject in subjects)
+          DropdownMenuEntry(value: subject.key, label: subject.label),
+      ],
     );
   }
 }
