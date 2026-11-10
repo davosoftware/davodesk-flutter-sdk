@@ -114,6 +114,24 @@ void main() {
     await empty.finish(tester);
   });
 
+  testWidgets(
+    'an article keeps Powered by DavoDesk at the bottom of the screen',
+    (tester) async {
+      final page = await pumpPage(
+        tester,
+        () => const ArticlePage(id: 'a1'),
+        api: helpCentre(),
+      );
+      final screen =
+          tester.view.physicalSize.height / tester.view.devicePixelRatio;
+      expect(
+        tester.getBottomLeft(find.text('Powered by DavoDesk')).dy,
+        greaterThan(screen - 40),
+      );
+      await page.finish(tester);
+    },
+  );
+
   testWidgets('an article asks "Was this helpful?", and a vote is sent', (
     tester,
   ) async {

@@ -54,6 +54,10 @@ class _EmailPageState extends State<EmailPage> {
       extraValue: _extra.text,
     );
     if (raised != null && mounted) {
+      // Sent: an emptied form can't send the same message twice.
+      for (final field in [_subject, _extra, _message]) {
+        field.clear();
+      }
       scope.onRaised?.call(raised);
       scope.go(context, TicketPlace(raised.ticket.id));
     }

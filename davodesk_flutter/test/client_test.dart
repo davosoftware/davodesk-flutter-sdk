@@ -91,6 +91,23 @@ void main() {
     client.dispose();
   });
 
+  test('a handoff or an ended chat reads the tickets again', () async {
+    final (:client, :api, :sockets, identities: _) = arrange();
+    await client.start();
+    final reads = api.ticketReads;
+    sockets.single.trigger('handoff', {
+      'ticket_id': 't1',
+      'resumed': false,
+      'reason': 'customer_requested',
+    });
+    await pumpEventQueue();
+    expect(api.ticketReads, reads + 1);
+    sockets.single.trigger('ended', {'reason': 'ticket_closed'});
+    await pumpEventQueue();
+    expect(api.ticketReads, reads + 2);
+    client.dispose();
+  });
+
   test('an answers-only brand opens no socket and reads no tickets', () async {
     final (:client, :api, :sockets, identities: _) = arrange();
     api.supportMode = 'assistant_only';

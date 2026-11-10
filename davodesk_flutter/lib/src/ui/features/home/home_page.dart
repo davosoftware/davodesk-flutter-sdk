@@ -119,81 +119,94 @@ class HomeView extends StatelessWidget {
               child: Center(
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 640),
-                  child: ListView(
-                    padding: EdgeInsets.only(
-                      bottom: MediaQuery.paddingOf(context).bottom + 8,
-                    ),
+                  child: Column(
                     children: [
-                      _Header(state: state, onClose: onClose),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 14),
-                        child: Column(
-                          spacing: 12,
+                      Expanded(
+                        child: ListView(
+                          padding: const EdgeInsets.only(bottom: 16),
                           children: [
-                            if (state.failed)
-                              _Card(child: Recover(onRetry: onRetry)),
-                            if (recent != null)
-                              _Card(
-                                child: _RecentRow(
-                                  card: recent,
-                                  onTap: () => onGo(switch (recent.ticketId) {
-                                    final id? => TicketPlace(id),
-                                    null => const ConversationPlace(),
-                                  }),
-                                ),
+                            _Header(state: state, onClose: onClose),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
                               ),
-                            if (state.showMessages || state.showHelp)
-                              _Card(
-                                child: Column(
-                                  children: [
-                                    if (state.showMessages)
-                                      _Row(
-                                        label: 'Messages',
+                              child: Column(
+                                spacing: 12,
+                                children: [
+                                  if (state.failed)
+                                    _Card(child: Recover(onRetry: onRetry)),
+                                  if (recent != null)
+                                    _Card(
+                                      child: _RecentRow(
+                                        card: recent,
                                         onTap: () =>
-                                            onGo(const MessagesPlace()),
+                                            onGo(switch (recent.ticketId) {
+                                              final id? => TicketPlace(id),
+                                              null => const ConversationPlace(),
+                                            }),
                                       ),
-                                    if (state.showMessages && state.showHelp)
-                                      const Divider(),
-                                    if (state.showHelp)
-                                      _Row(
-                                        label: 'Help',
-                                        onTap: () => onGo(const HelpPlace()),
+                                    ),
+                                  if (state.showMessages || state.showHelp)
+                                    _Card(
+                                      child: Column(
+                                        children: [
+                                          if (state.showMessages)
+                                            _Row(
+                                              label: 'Messages',
+                                              onTap: () =>
+                                                  onGo(const MessagesPlace()),
+                                            ),
+                                          if (state.showMessages &&
+                                              state.showHelp)
+                                            const Divider(),
+                                          if (state.showHelp)
+                                            _Row(
+                                              label: 'Help',
+                                              onTap: () =>
+                                                  onGo(const HelpPlace()),
+                                            ),
+                                        ],
                                       ),
-                                  ],
-                                ),
-                              ),
-                            if (state.showEmail)
-                              _Card(
-                                child: _Row(
-                                  label: 'Send us a message',
-                                  icon: Icons.send_rounded,
-                                  onTap: () => onGo(const EmailPlace()),
-                                ),
-                              ),
-                            if (state.links.isNotEmpty)
-                              _Card(
-                                child: Column(
-                                  children: [
-                                    for (final (i, link)
-                                        in state.links.indexed) ...[
-                                      if (i > 0) const Divider(),
-                                      _Row(
-                                        label: link.title,
-                                        icon: Icons.open_in_new_rounded,
-                                        small: true,
-                                        onTap: () =>
-                                            onLink(Uri.parse(link.url)),
+                                    ),
+                                  if (state.showEmail)
+                                    _Card(
+                                      child: _Row(
+                                        label: 'Send us a message',
+                                        icon: Icons.send_rounded,
+                                        onTap: () => onGo(const EmailPlace()),
                                       ),
-                                    ],
-                                  ],
-                                ),
+                                    ),
+                                  if (state.links.isNotEmpty)
+                                    _Card(
+                                      child: Column(
+                                        children: [
+                                          for (final (i, link)
+                                              in state.links.indexed) ...[
+                                            if (i > 0) const Divider(),
+                                            _Row(
+                                              label: link.title,
+                                              icon: Icons.open_in_new_rounded,
+                                              small: true,
+                                              onTap: () =>
+                                                  onLink(Uri.parse(link.url)),
+                                            ),
+                                          ],
+                                        ],
+                                      ),
+                                    ),
+                                ],
                               ),
+                            ),
                           ],
                         ),
                       ),
-                      const Padding(
-                        padding: EdgeInsets.only(top: 20, bottom: 6),
-                        child: Center(child: PoweredBy()),
+                      // Pinned to the bottom of the screen, under what scrolls.
+                      Padding(
+                        padding: EdgeInsets.only(
+                          top: 8,
+                          bottom: MediaQuery.paddingOf(context).bottom + 10,
+                        ),
+                        child: const PoweredBy(),
                       ),
                     ],
                   ),

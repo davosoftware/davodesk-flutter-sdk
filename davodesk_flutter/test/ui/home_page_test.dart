@@ -44,6 +44,19 @@ void main() {
     await page.finish(tester);
   });
 
+  testWidgets('Powered by DavoDesk sits at the bottom of the screen', (
+    tester,
+  ) async {
+    final page = await pumpPage(tester, HomePage.new);
+    final screen =
+        tester.view.physicalSize.height / tester.view.devicePixelRatio;
+    expect(
+      tester.getBottomLeft(find.text('Powered by DavoDesk')).dy,
+      greaterThan(screen - 40),
+    );
+    await page.finish(tester);
+  });
+
   testWidgets('its rows lead to Messages, Help and Send us a message', (
     tester,
   ) async {

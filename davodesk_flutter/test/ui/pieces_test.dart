@@ -1,13 +1,16 @@
 import 'package:davodesk_flutter/davodesk_flutter.dart';
 import 'package:davodesk_flutter/src/ui/core/support_shell.dart';
+import 'package:davodesk_flutter/src/ui/features/conversation/conversation_view_model.dart';
 import 'package:davodesk_flutter/src/ui/theme.dart';
 import 'package:davodesk_flutter/src/ui/widgets/brand_tile.dart';
 import 'package:davodesk_flutter/src/ui/widgets/header_logo.dart';
+import 'package:davodesk_flutter/src/ui/widgets/message_bubble.dart';
 import 'package:davodesk_flutter/src/ui/widgets/powered_by.dart';
 import 'package:davodesk_flutter/src/ui/widgets/recover.dart';
 import 'package:davodesk_flutter/src/ui/widgets/state_chip.dart';
 import 'package:davodesk_flutter/src/ui/words.dart';
 import 'package:flutter/material.dart' as framework;
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -122,6 +125,35 @@ void main() {
       await tester.pumpWidget(host(StateChip(status: status)));
       expect(find.text(label), findsOneWidget, reason: status);
     }
+  });
+
+  testWidgets('the shell gives the status bar icons that read on the page', (
+    tester,
+  ) async {
+    Brightness? icons() => tester
+        .widget<AnnotatedRegion<SystemUiOverlayStyle>>(
+          find.byType(AnnotatedRegion<SystemUiOverlayStyle>).first,
+        )
+        .value
+        .statusBarIconBrightness;
+    await tester.pumpWidget(host(const SizedBox()));
+    expect(icons(), Brightness.dark);
+    await tester.pumpWidget(
+      host(const SizedBox(), brightness: Brightness.dark),
+    );
+    expect(icons(), Brightness.light);
+  });
+
+  testWidgets("a person's avatar letter is a capital", (tester) async {
+    await tester.pumpWidget(
+      host(
+        const MessageBubble(
+          item: BubbleItem(id: 'm1', text: 'Hi Ada', label: 'superchidi'),
+          maxWidth: 300,
+        ),
+      ),
+    );
+    expect(find.text('S'), findsOneWidget);
   });
 
   testWidgets('PoweredBy shows the DavoDesk mark and words', (tester) async {
