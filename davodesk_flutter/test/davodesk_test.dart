@@ -59,7 +59,7 @@ void main() {
     final (:context, api: _, sockets: _, events: _) = await host(tester);
     final pages = {
       DavoDeskPage.home: 'How can we help?',
-      DavoDeskPage.messages: 'No Messages',
+      DavoDeskPage.chats: 'No chats yet',
       DavoDeskPage.help: 'Search help articles',
       DavoDeskPage.contact:
           'Have a question about your order or our services? '
@@ -82,9 +82,9 @@ void main() {
     final (:context, api: _, sockets: _, events: _) = await host(tester);
     DavoDesk.show(context);
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Messages'));
+    await tester.tap(find.text('Chat with us'));
     await tester.pumpAndSettle();
-    expect(find.text('No Messages'), findsOneWidget);
+    expect(find.text('No chats yet'), findsOneWidget);
     await tester.tap(find.bySemanticsLabel('Back'));
     await tester.pumpAndSettle();
     expect(find.text('How can we help?'), findsOneWidget);
@@ -191,7 +191,7 @@ void main() {
       );
       DavoDesk.show(context);
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Messages'));
+      await tester.tap(find.text('Chat with us'));
       await tester.pumpAndSettle();
 
       await DavoDesk.logout();

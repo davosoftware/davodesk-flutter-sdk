@@ -45,7 +45,6 @@ class _MessagesPageState extends State<MessagesPage> {
           await model.markSeen(id);
           if (context.mounted) scope.go(context, TicketPlace(id));
         },
-        onAsk: () => scope.go(context, const ConversationPlace()),
         onNew: () => scope.go(context, const ConversationPlace(fresh: true)),
         onRetry: model.load,
         onBack: () => Navigator.maybePop(context),
@@ -54,14 +53,13 @@ class _MessagesPageState extends State<MessagesPage> {
   }
 }
 
-/// Messages drawn from [state].
+/// The customer's chats, drawn from [state], with Start a new chat at the bottom.
 class MessagesView extends StatelessWidget {
   /// Creates the view.
   const MessagesView({
     super.key,
     required this.state,
     required this.onOpen,
-    required this.onAsk,
     required this.onNew,
     required this.onRetry,
     required this.onBack,
@@ -70,13 +68,10 @@ class MessagesView extends StatelessWidget {
   /// What to show.
   final MessagesState state;
 
-  /// Opens a conversation.
+  /// Opens a chat.
   final void Function(String id) onOpen;
 
-  /// Opens the conversation, from the empty state.
-  final VoidCallback onAsk;
-
-  /// Starts a new conversation.
+  /// Starts a new chat.
   final VoidCallback onNew;
 
   /// Loads again after a failure.
@@ -96,7 +91,7 @@ class MessagesView extends StatelessWidget {
             constraints: const BoxConstraints(maxWidth: 640),
             child: Column(
               children: [
-                _Bar(onBack: onBack, onNew: onNew),
+                _Bar(onBack: onBack),
                 const Divider(),
                 Expanded(
                   child: switch (state) {
@@ -106,7 +101,7 @@ class MessagesView extends StatelessWidget {
                     MessagesState(rows: [], loading: true) => const Center(
                       child: CircularProgressIndicator(),
                     ),
-                    MessagesState(rows: []) => _Empty(onAsk: onAsk),
+                    MessagesState(rows: []) => const _Empty(),
                     MessagesState(:final rows) => ListView.builder(
                       itemCount: rows.length,
                       itemBuilder: (context, i) => _ConversationRow(
@@ -116,6 +111,17 @@ class MessagesView extends StatelessWidget {
                     ),
                   },
                 ),
+                if (!state.failed && !(state.loading && state.rows.isEmpty))
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(14, 6, 14, 10),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: FilledButton(
+                        onPressed: onNew,
+                        child: const Text('Start a new chat'),
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),
@@ -126,10 +132,9 @@ class MessagesView extends StatelessWidget {
 }
 
 class _Bar extends StatelessWidget {
-  const _Bar({required this.onBack, required this.onNew});
+  const _Bar({required this.onBack});
 
   final VoidCallback onBack;
-  final VoidCallback onNew;
 
   @override
   Widget build(BuildContext context) {
@@ -151,7 +156,7 @@ class _Bar extends StatelessWidget {
             child: Semantics(
               headingLevel: 1,
               child: Text(
-                'Messages',
+                'Chats',
                 textAlign: TextAlign.center,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -163,14 +168,8 @@ class _Bar extends StatelessWidget {
               ),
             ),
           ),
-          IconButton(
-            onPressed: onNew,
-            style: tonal,
-            icon: const Icon(
-              Icons.edit_square,
-              semanticLabel: 'New conversation',
-            ),
-          ),
+          // Balances Back, so the title stays centred.
+          const SizedBox(width: 48),
         ],
       ),
     );
@@ -178,9 +177,7 @@ class _Bar extends StatelessWidget {
 }
 
 class _Empty extends StatelessWidget {
-  const _Empty({required this.onAsk});
-
-  final VoidCallback onAsk;
+  const _Empty();
 
   @override
   Widget build(BuildContext context) {
@@ -194,7 +191,7 @@ class _Empty extends StatelessWidget {
             Icon(Icons.forum_outlined, size: 40, color: colors.ink3),
             const SizedBox(height: 10),
             Text(
-              'No Messages',
+              'No chats yet',
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: colors.ink,
@@ -204,21 +201,9 @@ class _Empty extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              'Messages from the team will be shown here',
+              'Chats with the team will be shown here',
               textAlign: TextAlign.center,
               style: TextStyle(color: colors.ink2, fontSize: 13.5),
-            ),
-            const SizedBox(height: 16),
-            FilledButton(
-              onPressed: onAsk,
-              child: const Row(
-                mainAxisSize: MainAxisSize.min,
-                spacing: 8,
-                children: [
-                  Flexible(child: Text('Ask a question')),
-                  Icon(Icons.send_rounded, size: 18),
-                ],
-              ),
             ),
           ],
         ),

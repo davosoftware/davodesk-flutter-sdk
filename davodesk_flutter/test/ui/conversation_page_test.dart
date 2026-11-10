@@ -247,7 +247,7 @@ void main() {
   });
 
   testWidgets(
-    'a closed ticket shows the closed line, and Start a new conversation starts anew',
+    'a closed ticket shows the closed line, and Start a new chat starts anew',
     (tester) async {
       final (page, socket) = await open(
         tester,
@@ -259,12 +259,12 @@ void main() {
       );
       socket.trigger('ended', {'reason': 'ticket_closed'});
       await tester.pumpAndSettle();
-      expect(find.text('This conversation was closed.'), findsOneWidget);
+      expect(find.text('This chat was closed.'), findsOneWidget);
       expect(find.byType(TextField), findsNothing);
-      await tester.tap(find.text('Start a new conversation'));
+      await tester.tap(find.text('Start a new chat'));
       await tester.pumpAndSettle();
       expect(page.sockets, hasLength(2));
-      expect(find.text('This conversation was closed.'), findsNothing);
+      expect(find.text('This chat was closed.'), findsNothing);
       await page.finish(tester);
     },
   );

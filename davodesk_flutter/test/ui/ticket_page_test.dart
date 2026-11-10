@@ -53,24 +53,21 @@ void main() {
     expect(find.text('Mara'), findsOneWidget);
     expect(find.text('How was the help?'), findsNothing);
     expect(find.text('Reopen it'), findsNothing);
-    await tester.tap(find.text('Continue the conversation'));
+    await tester.tap(find.text('Continue the chat'));
     expect(page.went, [isA<ConversationPlace>()]);
     await page.finish(tester);
   });
 
   testWidgets(
-    'Continue the conversation sits at the bottom, as Start a new conversation does',
+    'Continue the chat sits at the bottom, as Start a new chat does',
     (tester) async {
       final page = await openTicket(tester, withTicket({}));
-      final button = find.widgetWithText(
-        FilledButton,
-        'Continue the conversation',
-      );
+      final button = find.widgetWithText(FilledButton, 'Continue the chat');
       expect(button, findsOneWidget);
       expect(
         find.descendant(
           of: find.byType(ListView),
-          matching: find.text('Continue the conversation'),
+          matching: find.text('Continue the chat'),
         ),
         findsNothing,
       );
@@ -81,12 +78,12 @@ void main() {
     },
   );
 
-  testWidgets('no Continue the conversation for a ticket that failed to load', (
+  testWidgets('no Continue the chat for a ticket that failed to load', (
     tester,
   ) async {
     final page = await openTicket(tester, FakeApi());
     expect(find.text('Something went wrong here.'), findsOneWidget);
-    expect(find.text('Continue the conversation'), findsNothing);
+    expect(find.text('Continue the chat'), findsNothing);
     await page.finish(tester);
   });
 
@@ -130,23 +127,18 @@ void main() {
     await page.finish(tester);
   });
 
-  testWidgets(
-    'a closed ticket shows the closed line, and Start a new conversation',
-    (tester) async {
-      final page = await openTicket(tester, withTicket({'status': 'closed'}));
-      expect(find.text('This conversation was closed.'), findsOneWidget);
-      expect(find.text('Continue the conversation'), findsNothing);
-      await tester.tap(find.text('Start a new conversation'));
-      expect(page.went, [
-        isA<ConversationPlace>().having(
-          (place) => place.fresh,
-          'fresh',
-          isTrue,
-        ),
-      ]);
-      await page.finish(tester);
-    },
-  );
+  testWidgets('a closed ticket shows the closed line, and Start a new chat', (
+    tester,
+  ) async {
+    final page = await openTicket(tester, withTicket({'status': 'closed'}));
+    expect(find.text('This chat was closed.'), findsOneWidget);
+    expect(find.text('Continue the chat'), findsNothing);
+    await tester.tap(find.text('Start a new chat'));
+    expect(page.went, [
+      isA<ConversationPlace>().having((place) => place.fresh, 'fresh', isTrue),
+    ]);
+    await page.finish(tester);
+  });
 
   testWidgets('a merged ticket opens the ticket it was merged into', (
     tester,

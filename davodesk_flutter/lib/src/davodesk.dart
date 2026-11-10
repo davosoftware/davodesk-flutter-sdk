@@ -21,11 +21,11 @@ import 'ui/words.dart';
 
 /// A support page [DavoDesk.show] can open.
 enum DavoDeskPage {
-  /// Home: the greeting, Messages, Help and Send us a message.
+  /// Home: the greeting, Chat with us, Help and Send us a message.
   home,
 
-  /// The customer's conversations.
-  messages,
+  /// The customer's chats, with Start a new chat.
+  chats,
 
   /// The help centre.
   help,
@@ -133,7 +133,7 @@ abstract final class DavoDesk {
     DavoDeskPage page = DavoDeskPage.home,
   }) => _support.open(context, switch (page) {
     .home => const HomePage(),
-    .messages => const MessagesPage(),
+    .chats => const MessagesPage(),
     .help => const HelpPage(),
     .contact => const ContactPage(),
   });

@@ -152,7 +152,7 @@ class HomeView extends StatelessWidget {
                                         children: [
                                           if (state.showMessages)
                                             _Row(
-                                              label: 'Messages',
+                                              label: 'Chat with us',
                                               onTap: () =>
                                                   onGo(const MessagesPlace()),
                                             ),

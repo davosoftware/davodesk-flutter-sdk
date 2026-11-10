@@ -128,7 +128,6 @@ Widget _messagesView(Brightness brightness, MessagesState state) => _screen(
   MessagesView(
     state: state,
     onOpen: (_) {},
-    onAsk: () {},
     onNew: () {},
     onRetry: () {},
     onBack: () {},
@@ -319,16 +318,16 @@ Widget homeLight() => _homeView(Brightness.light);
 @Preview(group: 'Home', name: 'Dark')
 Widget homeDark() => _homeView(Brightness.dark);
 
-/// Messages, light.
-@Preview(group: 'Messages', name: 'Light')
+/// Chats, light.
+@Preview(group: 'Chats', name: 'Light')
 Widget messagesLight() => _messagesView(Brightness.light, _messages);
 
-/// Messages, dark.
-@Preview(group: 'Messages', name: 'Dark')
+/// Chats, dark.
+@Preview(group: 'Chats', name: 'Dark')
 Widget messagesDark() => _messagesView(Brightness.dark, _messages);
 
-/// Messages with none yet.
-@Preview(group: 'Messages', name: 'Empty')
+/// Chats with none yet.
+@Preview(group: 'Chats', name: 'Empty')
 Widget messagesEmpty() =>
     _messagesView(Brightness.light, const MessagesState());
 

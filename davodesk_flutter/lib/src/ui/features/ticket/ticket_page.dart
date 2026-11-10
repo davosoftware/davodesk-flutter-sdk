@@ -157,7 +157,7 @@ class TicketView extends StatelessWidget {
                           if (state.closed)
                             Center(
                               child: Text(
-                                'This conversation was closed.',
+                                'This chat was closed.',
                                 style: small,
                               ),
                             ),
@@ -184,11 +184,11 @@ class TicketView extends StatelessWidget {
                       child: state.closed
                           ? FilledButton(
                               onPressed: onStartNew,
-                              child: const Text('Start a new conversation'),
+                              child: const Text('Start a new chat'),
                             )
                           : FilledButton(
                               onPressed: onContinue,
-                              child: const Text('Continue the conversation'),
+                              child: const Text('Continue the chat'),
                             ),
                     ),
                   ),
