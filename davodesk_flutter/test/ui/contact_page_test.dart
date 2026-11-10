@@ -94,7 +94,7 @@ void main() {
         'subject': 'Card declined',
         'message': 'Order ID: #VP-8291\n\nMy card…',
       });
-      expect(find.text('Sent. We’ll reply in Messages.'), findsOneWidget);
+      expect(find.text('Sent. We’ll reply in Chats.'), findsOneWidget);
       expect(page.went, [
         isA<TicketPlace>().having(
           (place) => place.id,
@@ -111,7 +111,7 @@ void main() {
     await fill(tester, order: '#VP-8291');
     await tester.tap(find.text('Send'));
     await tester.pumpAndSettle();
-    expect(find.text('Sent. We’ll reply in Messages.'), findsOneWidget);
+    expect(find.text('Sent. We’ll reply in Chats.'), findsOneWidget);
     expect(find.text('Card declined'), findsNothing);
     expect(find.text('#VP-8291'), findsNothing);
     expect(find.text('My card…'), findsNothing);

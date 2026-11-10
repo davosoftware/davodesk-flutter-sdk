@@ -73,25 +73,28 @@ void main() {
     await page.finish(tester);
   });
 
-  testWidgets('the empty state, and Ask a question opening a conversation', (
+  testWidgets('Chats, and the empty state with only the bottom button', (
     tester,
   ) async {
     final page = await pumpPage(tester, MessagesPage.new);
-    expect(find.text('No Messages'), findsOneWidget);
-    expect(
-      find.text('Messages from the team will be shown here'),
-      findsOneWidget,
-    );
-    await tester.tap(find.text('Ask a question'));
-    expect(page.went, [
-      isA<ConversationPlace>().having((place) => place.fresh, 'fresh', isFalse),
-    ]);
+    expect(find.text('Chats'), findsOneWidget);
+    expect(find.text('No chats yet'), findsOneWidget);
+    expect(find.text('Chats with the team will be shown here'), findsOneWidget);
+    expect(find.byType(FilledButton), findsOneWidget);
+    expect(find.text('Start a new chat'), findsOneWidget);
     await page.finish(tester);
   });
 
-  testWidgets('the pencil starts a new conversation', (tester) async {
+  testWidgets('Start a new chat sits at the bottom and starts a fresh chat', (
+    tester,
+  ) async {
     final page = await pumpPage(tester, MessagesPage.new, api: withTickets());
-    await tester.tap(find.bySemanticsLabel('New conversation'));
+    expect(find.bySemanticsLabel('New conversation'), findsNothing);
+    final button = find.widgetWithText(FilledButton, 'Start a new chat');
+    final screen = tester.view.physicalSize / tester.view.devicePixelRatio;
+    expect(tester.getRect(button).bottom, greaterThan(screen.height - 24));
+    expect(tester.getRect(button).width, greaterThan(screen.width - 40));
+    await tester.tap(button);
     expect(page.went, [
       isA<ConversationPlace>().having((place) => place.fresh, 'fresh', isTrue),
     ]);

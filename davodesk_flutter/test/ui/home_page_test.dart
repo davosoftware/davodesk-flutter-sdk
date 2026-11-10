@@ -57,11 +57,12 @@ void main() {
     await page.finish(tester);
   });
 
-  testWidgets('its rows lead to Messages, Help and Send us a message', (
+  testWidgets('its rows lead to the chats, Help and Send us a message', (
     tester,
   ) async {
     final page = await pumpPage(tester, HomePage.new);
-    await tester.tap(find.text('Messages'));
+    expect(find.text('Messages'), findsNothing);
+    await tester.tap(find.text('Chat with us'));
     await tester.tap(find.text('Help'));
     await tester.tap(find.text('Send us a message'));
     expect(page.went, [
@@ -148,9 +149,9 @@ void main() {
       ],
     });
     await tester.pumpAndSettle();
-    expect(find.text('Your conversation'), findsOneWidget);
+    expect(find.text('Your chat'), findsOneWidget);
     expect(find.text('You: Where is my card?'), findsOneWidget);
-    await tester.tap(find.text('Your conversation'));
+    await tester.tap(find.text('Your chat'));
     expect(page.went, [isA<ConversationPlace>()]);
     await page.finish(tester);
   });
@@ -164,7 +165,7 @@ void main() {
         api: FakeApi()..articleTotal = 0,
       );
       expect(find.text('Help'), findsNothing);
-      expect(find.text('Messages'), findsOneWidget);
+      expect(find.text('Chat with us'), findsOneWidget);
       await noArticles.finish(tester);
 
       final answersOnly = await pumpPage(
@@ -172,7 +173,7 @@ void main() {
         HomePage.new,
         api: FakeApi()..supportMode = 'assistant_only',
       );
-      expect(find.text('Messages'), findsNothing);
+      expect(find.text('Chat with us'), findsNothing);
       expect(find.text('Send us a message'), findsNothing);
       expect(find.text('Help'), findsOneWidget);
       expect(answersOnly.sockets, isEmpty);

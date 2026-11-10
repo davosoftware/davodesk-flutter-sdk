@@ -56,7 +56,7 @@ RecentCard? recentOf({
         .where((each) => each.id == conversation.ticketId)
         .firstOrNull;
     return RecentCard(
-      subject: ticket?.subject ?? 'Your conversation',
+      subject: ticket?.subject ?? 'Your chat',
       line: last == null
           ? ''
           : '${speakerName(last.senderType, last.senderDisplayName, brand: brand, aiName: aiName)}: '

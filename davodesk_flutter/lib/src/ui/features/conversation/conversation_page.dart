@@ -182,7 +182,7 @@ class _ConversationViewState extends State<ConversationView> {
                       width: double.infinity,
                       child: FilledButton(
                         onPressed: widget.onStartNew,
-                        child: const Text('Start a new conversation'),
+                        child: const Text('Start a new chat'),
                       ),
                     ),
                   )

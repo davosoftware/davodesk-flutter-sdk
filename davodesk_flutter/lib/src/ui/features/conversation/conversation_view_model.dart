@@ -149,9 +149,9 @@ class ConversationViewModel extends ChangeNotifier {
       reconnecting: chat.connection == .reconnecting,
       limited: chat.limitedFor != null,
       endedLine: closed
-          ? 'This conversation was closed.'
+          ? 'This chat was closed.'
           : ended != null && ended != 'helped'
-          ? 'This conversation has ended.'
+          ? 'This chat has ended.'
           : null,
       closed: closed,
       showComposer: ended == null && chat.options.isEmpty,

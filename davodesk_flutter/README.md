@@ -38,8 +38,8 @@ Flutter 3.47 or later (Dart 3.13).
 
    ```dart
    DavoDesk.show(context);                                // Home
-   DavoDesk.show(context, page: DavoDeskPage.messages);   // or .help, .contact
-   DavoDesk.ask(context, 'Where is my order?');           // a conversation, asked
+   DavoDesk.show(context, page: DavoDeskPage.chats);      // or .help, .contact
+   DavoDesk.ask(context, 'Where is my order?');           // a chat, asked
    DavoDesk.openTicket(context, ticketId);                // e.g. from a push notification
    ```
 

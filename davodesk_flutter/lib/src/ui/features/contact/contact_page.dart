@@ -116,7 +116,7 @@ class _ContactPageState extends State<ContactPage> {
                               text: raised.resumed
                                   ? 'Added to your open request '
                                         '${referenceOf(raised.ticket.id)}'
-                                  : 'Sent. We’ll reply in Messages.',
+                                  : 'Sent. We’ll reply in Chats.',
                               color: colors.ok,
                               background: colors.okSoft,
                             ),
