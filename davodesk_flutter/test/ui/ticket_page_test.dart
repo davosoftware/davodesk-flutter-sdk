@@ -58,6 +58,38 @@ void main() {
     await page.finish(tester);
   });
 
+  testWidgets(
+    'Continue the conversation sits at the bottom, as Start a new conversation does',
+    (tester) async {
+      final page = await openTicket(tester, withTicket({}));
+      final button = find.widgetWithText(
+        FilledButton,
+        'Continue the conversation',
+      );
+      expect(button, findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(ListView),
+          matching: find.text('Continue the conversation'),
+        ),
+        findsNothing,
+      );
+      final screen = tester.view.physicalSize / tester.view.devicePixelRatio;
+      expect(tester.getRect(button).bottom, greaterThan(screen.height - 24));
+      expect(tester.getRect(button).width, greaterThan(screen.width - 40));
+      await page.finish(tester);
+    },
+  );
+
+  testWidgets('no Continue the conversation for a ticket that failed to load', (
+    tester,
+  ) async {
+    final page = await openTicket(tester, FakeApi());
+    expect(find.text('Something went wrong here.'), findsOneWidget);
+    expect(find.text('Continue the conversation'), findsNothing);
+    await page.finish(tester);
+  });
+
   testWidgets('the rating only when asked: Good or Bad, a comment, then Send', (
     tester,
   ) async {

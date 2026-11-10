@@ -154,14 +154,6 @@ class TicketView extends StatelessWidget {
                                 ),
                               ],
                             ),
-                          if (state.open)
-                            Align(
-                              alignment: AlignmentDirectional.centerStart,
-                              child: TextButton(
-                                onPressed: onContinue,
-                                child: const Text('Continue the conversation'),
-                              ),
-                            ),
                           if (state.closed)
                             Center(
                               child: Text(
@@ -182,15 +174,22 @@ class TicketView extends StatelessWidget {
                     ),
                   },
                 ),
-                if (state.closed)
+                if (!state.loading &&
+                    !state.failed &&
+                    (state.closed || state.open))
                   Padding(
                     padding: const EdgeInsets.fromLTRB(14, 6, 14, 10),
                     child: SizedBox(
                       width: double.infinity,
-                      child: FilledButton(
-                        onPressed: onStartNew,
-                        child: const Text('Start a new conversation'),
-                      ),
+                      child: state.closed
+                          ? FilledButton(
+                              onPressed: onStartNew,
+                              child: const Text('Start a new conversation'),
+                            )
+                          : FilledButton(
+                              onPressed: onContinue,
+                              child: const Text('Continue the conversation'),
+                            ),
                     ),
                   ),
               ],
