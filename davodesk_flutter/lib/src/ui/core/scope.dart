@@ -26,8 +26,8 @@ final class const HelpPlace() extends SupportPlace {
   this;
 }
 
-/// The email form.
-final class const EmailPlace() extends SupportPlace {
+/// The contact form, "Send us a message".
+final class const ContactPlace() extends SupportPlace {
   /// Creates the place.
   this;
 }
@@ -68,7 +68,7 @@ enum AttachFrom {
 }
 
 /// What every support page reads: the [client], the channel's [config], how to [go]
-/// elsewhere, how to [openLink], and the app's [emailForm].
+/// elsewhere, how to [openLink], and the app's [contactForm].
 class SupportScope extends InheritedWidget {
   /// Creates the scope.
   const SupportScope({
@@ -78,7 +78,7 @@ class SupportScope extends InheritedWidget {
     required this.go,
     Future<bool> Function(Uri url)? openLink,
     Future<UploadFile?> Function(AttachFrom from)? pickAttachment,
-    this.emailForm,
+    this.contactForm,
     this.onRaised,
     required super.child,
   }) : openLink = openLink ?? _launch,
@@ -99,10 +99,10 @@ class SupportScope extends InheritedWidget {
   /// Lets the customer pick a photo or a file; null when they cancel.
   final Future<UploadFile?> Function(AttachFrom from) pickAttachment;
 
-  /// The email form's words that belong to the app.
-  final DavoDeskEmailForm? emailForm;
+  /// The contact form's words that belong to the app.
+  final DavoDeskContactForm? contactForm;
 
-  /// Hears of each ticket the email form raises.
+  /// Hears of each ticket the contact form raises.
   final void Function(RaisedTicket raised)? onRaised;
 
   /// The scope around [context].
@@ -116,7 +116,7 @@ class SupportScope extends InheritedWidget {
   bool updateShouldNotify(SupportScope oldWidget) =>
       client != oldWidget.client ||
       config != oldWidget.config ||
-      emailForm != oldWidget.emailForm;
+      contactForm != oldWidget.contactForm;
 }
 
 Future<bool> _launch(Uri url) =>

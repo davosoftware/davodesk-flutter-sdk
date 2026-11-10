@@ -8,8 +8,8 @@ import 'data/repositories/session_repository.dart';
 import 'domain/models.dart' show ChannelConfig;
 import 'ui/core/scope.dart';
 import 'ui/core/support_shell.dart';
+import 'ui/features/contact/contact_page.dart';
 import 'ui/features/conversation/conversation_page.dart';
-import 'ui/features/email/email_page.dart';
 import 'ui/features/help/article_page.dart';
 import 'ui/features/help/collection_page.dart';
 import 'ui/features/help/help_page.dart';
@@ -30,8 +30,8 @@ enum DavoDeskPage {
   /// The help centre.
   help,
 
-  /// The email form.
-  email,
+  /// The contact form, "Send us a message".
+  contact,
 }
 
 /// Something the app may want to know about support.
@@ -85,14 +85,14 @@ abstract final class DavoDesk {
   /// Sets support up for the channel [channelId], whose customer [identityToken]
   /// names: a function that asks the app's backend for a fresh identity token.
   ///
-  /// [theme] gives the screens an accent, light or dark, or a font; [emailForm] sets
-  /// the email form's note and extra field. Calling it again starts over.
+  /// [theme] gives the screens an accent, light or dark, or a font; [contactForm] sets
+  /// the contact form's note and extra field. Calling it again starts over.
   static Future<void> initialize({
     required String channelId,
     required Future<String?> Function() identityToken,
     String apiUrl = 'https://api.davodesk.com',
     DavoDeskTheme? theme,
-    DavoDeskEmailForm? emailForm,
+    DavoDeskContactForm? contactForm,
   }) {
     WidgetsFlutterBinding.ensureInitialized();
     return initializeWith(
@@ -102,7 +102,7 @@ abstract final class DavoDesk {
         apiUrl: Uri.parse(apiUrl),
       ),
       theme: theme,
-      emailForm: emailForm,
+      contactForm: contactForm,
     );
   }
 
@@ -111,10 +111,10 @@ abstract final class DavoDesk {
   static Future<void> initializeWith(
     DavoDeskClient client, {
     DavoDeskTheme? theme,
-    DavoDeskEmailForm? emailForm,
+    DavoDeskContactForm? contactForm,
   }) async {
     await reset();
-    final support = _current = _Support(client, theme, emailForm);
+    final support = _current = _Support(client, theme, contactForm);
     // The unread badge needs the tickets before support is first opened.
     await support.client.refreshTickets().catchError((Object _) {});
   }
@@ -135,7 +135,7 @@ abstract final class DavoDesk {
     .home => const HomePage(),
     .messages => const MessagesPage(),
     .help => const HelpPage(),
-    .email => const EmailPage(),
+    .contact => const ContactPage(),
   });
 
   /// Opens the conversation and asks [text] in it; a brand that only answers from its
@@ -164,7 +164,7 @@ abstract final class DavoDesk {
 }
 
 class _Support {
-  _Support(this.client, this.theme, this.emailForm) {
+  _Support(this.client, this.theme, this.contactForm) {
     client.unread.addListener(_onUnread);
     client.conversation.addListener(_onConversation);
     _sessionChanges = client.sessionChanges.listen(_onSession);
@@ -172,7 +172,7 @@ class _Support {
 
   final DavoDeskClient client;
   final DavoDeskTheme? theme;
-  final DavoDeskEmailForm? emailForm;
+  final DavoDeskContactForm? contactForm;
   final events = StreamController<DavoDeskEvent>.broadcast();
   final _routes = <Route<void>>[];
   late final StreamSubscription<SessionState> _sessionChanges;
@@ -199,7 +199,7 @@ class _Support {
       builder: (_) => SupportScope(
         client: client,
         config: config,
-        emailForm: emailForm,
+        contactForm: contactForm,
         go: (from, place) => _push(from, config, _pageOf(place)),
         onRaised: (raised) => _announce(raised.ticket.id),
         child: Builder(
@@ -220,7 +220,7 @@ class _Support {
   static Widget _pageOf(SupportPlace place) => switch (place) {
     MessagesPlace() => const MessagesPage(),
     HelpPlace() => const HelpPage(),
-    EmailPlace() => const EmailPage(),
+    ContactPlace() => const ContactPage(),
     ConversationPlace(:final fresh) => ConversationPage(fresh: fresh),
     TicketPlace(:final id) => TicketPage(id: id),
     CollectionPlace(:final id, :final name) => CollectionPage(

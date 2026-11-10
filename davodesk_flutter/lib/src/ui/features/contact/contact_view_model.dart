@@ -6,10 +6,10 @@ import '../../../domain/models.dart';
 
 final _log = Logger('DavoDesk');
 
-/// The email form's state: sending, the ticket it raised, or a refusal.
-class EmailViewModel extends ChangeNotifier {
+/// The contact form's state: sending, the ticket it raised, or a refusal.
+class ContactViewModel extends ChangeNotifier {
   /// Creates the view model over [_client].
-  EmailViewModel(this._client);
+  ContactViewModel(this._client);
 
   final DavoDeskClient _client;
   bool _sending = false;
@@ -26,25 +26,33 @@ class EmailViewModel extends ChangeNotifier {
   RaisedTicket? get raised => _raised;
 
   /// Raises the ticket, once per tap however fast they come: one idempotency key each.
+  ///
+  /// The subject carries its key from [subjects] only while it is that subject's label.
   Future<RaisedTicket?> send({
     required String subject,
     required String message,
     String? extraLabel,
     String? extraValue,
+    List<RequestSubject> subjects = const [],
   }) async {
     if (_sending) return null;
     _sending = true;
     _failed = false;
     notifyListeners();
+    final typed = subject.trim();
     try {
       _raised = await _client.raiseTicket(
-        subject: subject.trim(),
+        subject: typed,
         message: message.trim(),
         extraLabel: extraLabel,
         extraValue: extraValue,
+        subjectKey: subjects
+            .where((each) => each.label == typed)
+            .firstOrNull
+            ?.key,
       );
     } on Object catch (error) {
-      _log.fine('The email form was refused: $error');
+      _log.fine('The contact form was refused: $error');
       _failed = true;
     }
     _sending = false;

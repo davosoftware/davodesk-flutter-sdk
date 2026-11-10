@@ -61,7 +61,9 @@ void main() {
       DavoDeskPage.home: 'How can we help?',
       DavoDeskPage.messages: 'No Messages',
       DavoDeskPage.help: 'Search help articles',
-      DavoDeskPage.email: 'Email Us',
+      DavoDeskPage.contact:
+          'Have a question about your order or our services? '
+          'Our team is here to help.',
     };
     for (final MapEntry(key: page, value: words) in pages.entries) {
       DavoDesk.show(context, page: page);

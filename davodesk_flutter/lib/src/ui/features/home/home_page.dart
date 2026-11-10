@@ -168,12 +168,12 @@ class HomeView extends StatelessWidget {
                                         ],
                                       ),
                                     ),
-                                  if (state.showEmail)
+                                  if (state.showContact)
                                     _Card(
                                       child: _Row(
                                         label: 'Send us a message',
                                         icon: Icons.send_rounded,
-                                        onTap: () => onGo(const EmailPlace()),
+                                        onTap: () => onGo(const ContactPlace()),
                                       ),
                                     ),
                                   if (state.links.isNotEmpty)

@@ -19,17 +19,17 @@ class const DavoDeskTheme({
   this;
 }
 
-/// The email form's words that belong to the app: [note], the line in the highlighted
+/// The contact form's words that belong to the app: [note], the line in the highlighted
 /// card (no card without one), and an optional [extraField].
-class const DavoDeskEmailForm({
+class const DavoDeskContactForm({
   final String? note,
   final DavoDeskFormField? extraField,
 }) {
-  /// Creates a [DavoDeskEmailForm].
+  /// Creates a [DavoDeskContactForm].
   this;
 }
 
-/// An extra field on the email form, such as an order number; its value goes first in
+/// An extra field on the contact form, such as an order number; its value goes first in
 /// the message as "[label]: value".
 class const DavoDeskFormField({
   required final String label,

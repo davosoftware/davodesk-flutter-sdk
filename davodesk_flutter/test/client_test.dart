@@ -202,6 +202,21 @@ void main() {
     client.dispose();
   });
 
+  test('raiseTicket passes the brand’s subject key on', () async {
+    final (:client, :api, sockets: _, identities: _) = arrange();
+    await client.raiseTicket(
+      subject: 'Card declined',
+      message: 'My card…',
+      subjectKey: 'rsub_1',
+    );
+    expect(api.raised.last.body, {
+      'subject': 'Card declined',
+      'message': 'My card…',
+      'subject_key': 'rsub_1',
+    });
+    client.dispose();
+  });
+
   test('retries a raise lost in transit with the same key', () {
     fakeAsync((async) {
       final (:client, :api, sockets: _, identities: _) = arrange();

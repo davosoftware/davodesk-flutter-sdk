@@ -67,7 +67,7 @@ void main() {
     expect(page.went, [
       isA<MessagesPlace>(),
       isA<HelpPlace>(),
-      isA<EmailPlace>(),
+      isA<ContactPlace>(),
     ]);
     await page.finish(tester);
   });

@@ -29,6 +29,19 @@ class const HomeLink(final String title, final String url) {
   };
 }
 
+/// A subject the brand offers on the contact form; raising with its [key] sends the
+/// ticket where the brand chose.
+class const RequestSubject(final String key, final String label) {
+  /// Creates a subject.
+  this;
+
+  /// Reads a subject, or null when it lacks its key or its words.
+  static RequestSubject? fromJson(Map<String, Object?> json) => switch (json) {
+    {'key': String key, 'label': String label} => RequestSubject(key, label),
+    _ => null,
+  };
+}
+
 /// A channel's look: its colour, title and links.
 class const ChannelLook({
   required final String accentColor,
@@ -62,6 +75,7 @@ class const ChannelConfig({
   final bool answersEnabled = false,
   final bool aiEnabled = false,
   final ChannelLook? appearance,
+  final List<RequestSubject> requestSubjects = const [],
 }) {
   /// Creates a [ChannelConfig].
   this;
@@ -85,6 +99,10 @@ class const ChannelConfig({
           final look? => ChannelLook.fromJson(look),
           null => null,
         },
+        requestSubjects: [
+          for (final subject in _maps(json['request_subjects']))
+            ?RequestSubject.fromJson(subject),
+        ],
       ),
     _ => throw const FormatException('Not a channel config'),
   };
@@ -314,7 +332,7 @@ class const CustomerTicket({
   String get status => summary.status;
 }
 
-/// A ticket raised from the email form; [resumed] means it was added to an open one.
+/// A ticket raised from the contact form; [resumed] means it was added to an open one.
 class const RaisedTicket(final bool resumed, final CustomerTicket ticket) {
   /// Creates a [RaisedTicket].
   this;

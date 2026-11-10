@@ -1,26 +1,26 @@
 import 'package:material_ui/material_ui.dart';
 
+import '../../../domain/models.dart' show RequestSubject;
 import '../../core/scope.dart';
 import '../../theme.dart';
 import '../../widgets/page_bar.dart';
 import '../../words.dart';
-import 'email_view_model.dart';
+import 'contact_view_model.dart';
 
-/// Email Support: raises a ticket without chat; the reply comes to Messages and by
-/// email.
-class EmailPage extends StatefulWidget {
+/// Send us a message: raises a ticket without chat; the reply comes to Messages.
+class ContactPage extends StatefulWidget {
   /// Creates the form.
-  const EmailPage({super.key});
+  const ContactPage({super.key});
 
   @override
-  State<EmailPage> createState() => _EmailPageState();
+  State<ContactPage> createState() => _ContactPageState();
 }
 
-class _EmailPageState extends State<EmailPage> {
+class _ContactPageState extends State<ContactPage> {
   final _subject = TextEditingController();
   final _extra = TextEditingController();
   final _message = TextEditingController();
-  EmailViewModel? _model;
+  ContactViewModel? _model;
 
   @override
   void initState() {
@@ -33,7 +33,7 @@ class _EmailPageState extends State<EmailPage> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _model ??= EmailViewModel(SupportScope.of(context).client);
+    _model ??= ContactViewModel(SupportScope.of(context).client);
   }
 
   @override
@@ -50,8 +50,9 @@ class _EmailPageState extends State<EmailPage> {
     final raised = await _model!.send(
       subject: _subject.text,
       message: _message.text,
-      extraLabel: scope.emailForm?.extraField?.label,
+      extraLabel: scope.contactForm?.extraField?.label,
       extraValue: _extra.text,
+      subjects: scope.config.requestSubjects,
     );
     if (raised != null && mounted) {
       // Sent: an emptied form can't send the same message twice.
@@ -68,7 +69,7 @@ class _EmailPageState extends State<EmailPage> {
     final scope = SupportScope.of(context);
     final colors = SupportColors.of(context);
     final model = _model!;
-    final form = scope.emailForm;
+    final form = scope.contactForm;
     final note = form?.note;
     final extra = form?.extraField;
     return Scaffold(
@@ -80,7 +81,7 @@ class _EmailPageState extends State<EmailPage> {
             child: Column(
               children: [
                 PageBar(
-                  title: 'Email Support',
+                  title: 'Send us a message',
                   centered: true,
                   onBack: () => Navigator.maybePop(context),
                 ),
@@ -95,15 +96,6 @@ class _EmailPageState extends State<EmailPage> {
                       return ListView(
                         padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
                         children: [
-                          Text(
-                            'Email Us',
-                            style: TextStyle(
-                              color: colors.ink,
-                              fontSize: 18,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
                           Text(
                             'Have a question about your order or our services? '
                             'Our team is here to help.',
@@ -122,7 +114,7 @@ class _EmailPageState extends State<EmailPage> {
                               text: raised.resumed
                                   ? 'Added to your open request '
                                         '${referenceOf(raised.ticket.id)}'
-                                  : 'Sent. We’ll reply here and by email.',
+                                  : 'Sent. We’ll reply in Messages.',
                               color: colors.ok,
                               background: colors.okSoft,
                             ),
@@ -137,11 +129,19 @@ class _EmailPageState extends State<EmailPage> {
                           ],
                           const SizedBox(height: 16),
                           const _Label('Subject'),
-                          _Field(
-                            key: const Key('subject'),
-                            controller: _subject,
-                            hint: 'What can we help you with?',
-                          ),
+                          if (scope.config.requestSubjects case final subjects
+                              when subjects.isNotEmpty)
+                            _SubjectField(
+                              key: const Key('subject'),
+                              controller: _subject,
+                              subjects: subjects,
+                            )
+                          else
+                            _Field(
+                              key: const Key('subject'),
+                              controller: _subject,
+                              hint: _subjectHint,
+                            ),
                           if (extra != null) ...[
                             const SizedBox(height: 12),
                             _Label(extra.label, optional: true),
@@ -165,7 +165,7 @@ class _EmailPageState extends State<EmailPage> {
                             style: FilledButton.styleFrom(
                               minimumSize: const Size.fromHeight(48),
                             ),
-                            child: const Text('Send Email'),
+                            child: const Text('Send'),
                           ),
                         ],
                       );
@@ -227,6 +227,23 @@ class _Label extends StatelessWidget {
   }
 }
 
+const _subjectHint = 'What can we help you with?';
+
+/// The form's own look for a text box.
+InputDecoration _decoration(SupportColors colors, String? hint) =>
+    InputDecoration(
+      hintText: hint,
+      hintStyle: TextStyle(color: colors.ink3, fontSize: 13.5),
+      filled: true,
+      fillColor: colors.shelf,
+      isDense: true,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: BorderSide.none,
+      ),
+    );
+
 class _Field extends StatelessWidget {
   const _Field({
     super.key,
@@ -248,21 +265,41 @@ class _Field extends StatelessWidget {
       maxLines: lines == 1 ? 1 : 8,
       textCapitalization: TextCapitalization.sentences,
       style: TextStyle(color: colors.ink, fontSize: 14),
-      decoration: InputDecoration(
-        hintText: hint,
-        hintStyle: TextStyle(color: colors.ink3, fontSize: 13.5),
-        filled: true,
-        fillColor: colors.shelf,
-        isDense: true,
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 12,
-          vertical: 12,
-        ),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide.none,
-        ),
+      decoration: _decoration(colors, hint),
+    );
+  }
+}
+
+/// Subject with the brand's subjects to pick from, filtered as the customer types; their
+/// own words are as welcome.
+class _SubjectField extends StatelessWidget {
+  const _SubjectField({
+    super.key,
+    required this.controller,
+    required this.subjects,
+  });
+
+  final TextEditingController controller;
+  final List<RequestSubject> subjects;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = SupportColors.of(context);
+    return DropdownMenu<String>(
+      controller: controller,
+      enableFilter: true,
+      requestFocusOnTap: true,
+      expandedInsets: EdgeInsets.zero,
+      menuHeight: 280,
+      textStyle: TextStyle(color: colors.ink, fontSize: 14),
+      decorationBuilder: (context, menu) => _decoration(colors, _subjectHint),
+      menuStyle: MenuStyle(
+        backgroundColor: WidgetStatePropertyAll(colors.paper),
       ),
+      dropdownMenuEntries: [
+        for (final subject in subjects)
+          DropdownMenuEntry(value: subject.key, label: subject.label),
+      ],
     );
   }
 }

@@ -23,8 +23,8 @@ Flutter 3.47 or later (Dart 3.13).
      channelId: 'ch_…', // your brand's app channel
      identityToken: () => myBackend.fetchDavoDeskIdentityToken(), // null when signed out
      theme: const DavoDeskTheme(accent: Color(0xFF1E5AF0)), // optional
-     emailForm: const DavoDeskEmailForm(
-       note: 'We typically respond to all email inquiries within 24 hours.',
+     contactForm: const DavoDeskContactForm(
+       note: 'We typically respond within 24 hours.',
        extraField: DavoDeskFormField(label: 'Order ID', hint: 'e.g. #VP-8291'),
      ),
    );
@@ -38,7 +38,7 @@ Flutter 3.47 or later (Dart 3.13).
 
    ```dart
    DavoDesk.show(context);                                // Home
-   DavoDesk.show(context, page: DavoDeskPage.messages);   // or .help, .email
+   DavoDesk.show(context, page: DavoDeskPage.messages);   // or .help, .contact
    DavoDesk.ask(context, 'Where is my order?');           // a conversation, asked
    DavoDesk.openTicket(context, ticketId);                // e.g. from a push notification
    ```
@@ -81,7 +81,7 @@ brightness or the font.
 ## Drawing your own screens
 
 `DavoDeskClient` is what the screens use: the live conversation (`conversation`), the
-tickets and the unread count, the email form's `raiseTicket`, attachments, the help centre,
+tickets and the unread count, the contact form's `raiseTicket`, attachments, the help centre,
 and `logout`. Create it once the app's binding is ready, call `start()`, and `dispose()` it
 when done.
 
