@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chat look mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #ffffff; --shelf: #f5f5f6; --hover: #efeff1; --rule: #e4e4e7; --rule-strong: #d4d4d8;
+    --ink: #18181b; --ink-2: #52525b; --ink-3: #6b6b74; --blue: #2350d8;
+    --note: #fff7e6; --note-ink: #7a4b00; --brand: #0e9384; --brand-web: #0e9384; --brand-app: #0e9384;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #141416; --shelf: #0f0f11; --hover: #1e1e22; --rule: #27272b; --rule-strong: #38383e;
+      --ink: #ededef; --ink-2: #b4b4bb; --ink-3: #9b9ba4; --blue: #3d6af5;
+      --note: #2a2110; --note-ink: #f2c879;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { margin: 0; display: flex; flex-direction: column; overflow: hidden; background: var(--shelf); color: var(--ink);
+    font: 14px/1.45 'Atkinson Hyperlegible Next', system-ui, sans-serif; }
+  button, input { font: inherit; color: inherit; }
+
+  /* The mockup's own bar, not part of the design */
+  .mock-bar { flex: none; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 8px 20px;
+    background: var(--note); color: var(--note-ink); border-bottom: 1px solid var(--rule); font-size: 13px; }
+  .mock-bar strong { font-weight: 700; }
+  .mock-bar .grow { flex: 1; min-width: 240px; }
+  .side-choice { border: 1px solid currentColor; background: transparent; border-radius: 999px;
+    padding: 2px 12px; cursor: pointer; color: var(--note-ink); }
+  .side-choice.on { background: var(--note-ink); color: var(--note); }
+
+  /* The page fills the window: the settings scroll, the preview never does */
+  .shell { flex: 1; min-height: 0; display: flex; min-width: 1100px; }
+  .nav { width: 210px; flex: none; padding: 16px 12px; overflow-y: auto; }
+  .nav .mark { display: flex; align-items: center; gap: 8px; font-weight: 700; padding: 4px 8px 16px; }
+  .nav .mark i { width: 22px; height: 22px; border-radius: 6px; background: var(--blue); display: inline-block; }
+  .nav h4 { margin: 14px 8px 4px; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); }
+  .nav a { display: block; padding: 6px 8px; border-radius: 7px; color: var(--ink-2); text-decoration: none; }
+  .nav a.on { background: var(--paper); color: var(--ink); font-weight: 600; box-shadow: 0 1px 2px rgb(0 0 0 / .06); }
+
+  .main { flex: 1; min-width: 0; min-height: 0; margin: 10px 10px 10px 0; background: var(--paper);
+    border: 1px solid var(--rule); border-radius: 14px; padding: 18px 26px 0;
+    display: grid; grid-template-columns: minmax(0, 1fr) 440px; gap: 26px; }
+  .main.preview-left { grid-template-columns: 440px minmax(0, 1fr); }
+  .main.preview-left .preview-col { order: -1; }
+  .left { min-height: 0; display: flex; flex-direction: column; }
+  .page-head { flex: none; margin-bottom: 14px; }
+  .crumbs { font-size: 13px; color: var(--ink-3); }
+  .crumbs b { color: var(--ink-2); font-weight: 500; }
+  h1 { margin: 4px 0 2px; font-size: 22px; letter-spacing: -0.01em; }
+  .lead { margin: 0; color: var(--ink-2); }
+
+  
+
+  /* The settings: their own scroll, with the save bar always at hand */
+  .form-col { flex: 1; min-height: 0; overflow-y: auto; padding-right: 6px; display: flex; flex-direction: column; }
+  .card { border: 1px solid var(--rule); border-radius: 12px; padding: 16px 18px; margin-bottom: 14px; }
+  .card h3 { margin: 0; font-size: 15px; }
+  .card .desc { margin: 2px 0 12px; color: var(--ink-2); font-size: 13px; }
+  .row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .field { margin-top: 10px; }
+  .field label { display: block; font-weight: 600; font-size: 13px; margin-bottom: 5px; }
+  .field .help { font-size: 12px; color: var(--ink-3); margin-top: 4px; }
+  .input { width: 100%; max-width: 360px; padding: 8px 10px; border: 1px solid var(--rule-strong); border-radius: 8px; background: var(--paper); }
+  .input:focus { outline: 2px solid var(--blue); outline-offset: 1px; border-color: transparent; }
+  .btn { padding: 6px 12px; border: 1px solid var(--rule-strong); border-radius: 8px; background: var(--paper); cursor: pointer; }
+  .btn:hover { background: var(--hover); }
+  .btn.primary { background: var(--blue); border-color: var(--blue); color: #fff; }
+  .seg { display: inline-flex; padding: 3px; border-radius: 9px; background: var(--shelf); border: 1px solid var(--rule); }
+  .seg button { border: 0; background: transparent; padding: 4px 12px; border-radius: 6px; cursor: pointer; color: var(--ink-2); }
+  .seg button[aria-pressed="true"] { background: var(--paper); color: var(--ink); font-weight: 600; box-shadow: 0 1px 2px rgb(0 0 0 / .08); }
+  .file-name { color: var(--ink-2); font-size: 13px; }
+  .wordmark-chip { display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px; border-radius: 8px;
+    background: var(--brand); color: #fff; font-weight: 700; letter-spacing: .01em; }
+  .swatch-row input[type=color] { width: 40px; height: 34px; padding: 2px; border: 1px solid var(--rule-strong); border-radius: 8px; background: var(--paper); cursor: pointer; }
+  .link-row { display: flex; justify-content: space-between; padding: 7px 10px; border: 1px solid var(--rule); border-radius: 8px; margin-top: 6px; font-size: 13px; }
+  .link-row span:last-child { color: var(--ink-3); }
+  .savebar { position: sticky; bottom: 0; margin-top: auto; padding: 10px 0 16px; background: var(--paper); display: flex; align-items: center; gap: 10px; }
+  .savebar .grow { flex: 1; color: var(--ink-2); font-size: 13px; }
+
+  /* The preview: the column's whole height, its content scaled to fit */
+  .preview-col { min-height: 0; display: flex; flex-direction: column; padding-bottom: 12px; }
+  .preview-card { flex: 1; min-height: 0; display: flex; flex-direction: column; border: 1px solid var(--rule); border-radius: 12px; overflow: hidden; }
+  .preview-head { flex: none; display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; border-bottom: 1px solid var(--rule); }
+  .preview-head b { font-size: 13px; }
+  .stage { flex: 1; min-height: 0; position: relative; overflow: hidden; background: var(--shelf); }
+  .fit { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%) scale(var(--s, 1)); }
+  .fit.web { width: 372px; height: 640px; }
+  .fit.app { width: 300px; height: 632px; }
+  .caption { flex: none; font-size: 12px; color: var(--ink-3); margin: 6px 2px 0; }
+  .caption p { margin: 2px 0; }
+  .preview[data-view="web"] .app-only, .preview[data-view="app"] .web-only { display: none; }
+  .fit.web { --brand: var(--brand-web); }
+  .fit.app { --brand: var(--brand-app); }
+  .wordmark-chip.app { background: var(--brand-app); }
+  .fit[data-corners="square"] .panel,
+  .fit[data-corners="square"] .msg,
+  .fit[data-corners="square"] .composer,
+  .fit[data-corners="square"] .launcher,
+  .fit[data-corners="square"] .logo-tile,
+  .fit[data-corners="square"] .choices span,
+  .fit[data-corners="square"] .source,
+  .fit[data-corners="square"] .notice { border-radius: 0; }
+  .field label.same { display: inline-flex; align-items: center; gap: 6px; font-weight: 400; color: var(--ink-2); margin: 0; }
+  .same input { accent-color: var(--blue); width: 15px; height: 15px; margin: 0; }
+
+  /* Shared bits of both previews */
+  .logo-tile { width: 28px; height: 28px; border-radius: 8px; flex: none; display: grid; place-items: center; overflow: hidden; }
+  .logo-tile svg { width: 100%; height: 100%; display: block; }
+  .logo-tile .initial { display: none; width: 100%; height: 100%; place-items: center; background: var(--brand); color: #fff; font-weight: 700; }
+  .no-logo .logo-tile svg { display: none; }
+  .no-logo .logo-tile .initial { display: grid; }
+  .who { display: flex; align-items: center; gap: 6px; margin: 10px 0 4px 2px; font-size: 12px; font-weight: 600; color: #52525b; }
+  .who .logo-tile { width: 20px; height: 20px; border-radius: 6px; font-size: 11px; }
+  .who .ai { color: var(--brand); font-size: 12px; }
+  .msg { max-width: 84%; padding: 8px 11px; border-radius: 14px; line-height: 1.4; font-size: 13px; margin: 3px 0; }
+  .msg.them { background: #fff; border: 1px solid #e4e4e7; border-bottom-left-radius: 4px; color: #18181b; }
+  .msg.me { align-self: flex-end; margin-left: auto; background: var(--brand); color: #fff; border-bottom-right-radius: 4px; }
+  .source { display: inline-block; margin-top: 6px; padding: 2px 8px; border-radius: 999px; background: #f1f1f3; color: #52525b; font-size: 11.5px; }
+  .choices { display: flex; gap: 6px; margin: 4px 0 0; flex-wrap: wrap; }
+  .choices span { padding: 4px 10px; border-radius: 999px; border: 1px solid var(--brand); color: var(--brand); font-size: 12px; background: #fff; }
+  .thread { display: flex; flex-direction: column; }
+
+  /* Website view: the customer's site with the widget open */
+  .site { position: absolute; inset: 0; background: #eceef2; border-radius: 10px; overflow: hidden; }
+  .site .bar { height: 34px; background: #fff; border-bottom: 1px solid #dfe2e7; display: flex; align-items: center; padding: 0 14px; color: #3f3f46; font-weight: 700; font-size: 13px; }
+  .site .skel { margin: 18px 16px; }
+  .site .skel i { display: block; height: 10px; border-radius: 5px; background: #dcdfe5; margin: 9px 0; }
+  .panel { position: absolute; bottom: 70px; right: 14px; width: 336px; height: 544px; background: #fff; border-radius: 16px;
+    box-shadow: 0 12px 34px -10px rgb(15 23 42 / .35), 0 0 0 1px rgb(15 23 42 / .06); display: flex; flex-direction: column; overflow: hidden; color: #18181b; }
+  .site[data-side="left"] .panel { right: auto; left: 14px; }
+  .panel .head { display: flex; align-items: center; gap: 9px; padding: 12px; border-bottom: 1px solid #ececef; }
+  .panel .head .name { font-weight: 700; font-size: 14px; flex: 1; }
+  .panel .head .x { color: #71717a; font-size: 16px; }
+  .panel .body { flex: 1; padding: 6px 12px 10px; overflow: hidden; }
+  .composer { margin: 8px 10px 10px; padding: 9px 12px; border: 1px solid #e4e4e7; border-radius: 12px; color: #a1a1aa; font-size: 13px; display: flex; justify-content: space-between; }
+  .composer b { color: var(--brand); }
+  .launcher { position: absolute; bottom: 14px; right: 14px; width: 48px; height: 48px; border-radius: 50%; background: var(--brand);
+    display: grid; place-items: center; box-shadow: 0 6px 16px -6px rgb(15 23 42 / .5); color: #fff; font-size: 18px; }
+  .site[data-side="left"] .launcher { right: auto; left: 14px; }
+
+  /* App view: the Flutter SDK's screen in a phone */
+  .phone { position: absolute; left: 9px; top: 9px; width: 282px; height: 614px; border-radius: 34px; background: #111; padding: 9px;
+    box-shadow: 0 0 0 1px rgb(128 128 140 / .35), 0 14px 34px -14px rgb(0 0 0 / .5); }
+  .screen { width: 100%; height: 100%; border-radius: 26px; overflow: hidden; background: #f7f7f8; display: flex; flex-direction: column; color: #18181b; }
+  .phone-status { height: 26px; display: flex; justify-content: space-between; align-items: center; padding: 0 18px; font-size: 11px; font-weight: 700; background: var(--brand); color: #fff; }
+  .apphead { background: var(--brand); color: #fff; padding: 8px 14px 14px; }
+  .apphead .top { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 15px; }
+  .apphead .tagline { font-size: 12px; opacity: .85; margin-top: 4px; }
+  .notice { margin: 10px 12px 0; padding: 6px 10px; border-radius: 8px; background: #ececef; color: #52525b; font-size: 11.5px; text-align: center; }
+  .screen .body { flex: 1; padding: 2px 12px; overflow: hidden; }
+  .powered { text-align: center; font-size: 10.5px; color: #a1a1aa; padding: 0 0 8px; }
+</style>
+</head>
+<body>
+
+<div class="mock-bar">
+  <span class="grow"><strong>Mockup v7:</strong> <em>Corners</em> (Rounded or Square) for the website and the app, beside each colour; the app's again start as <em>Same as website</em>.</span>
+  <span>Preview side:</span>
+  <button class="side-choice on" data-choice="preview-right" data-side="right" onclick="setSide('right')">Right (my suggestion)</button>
+  <button class="side-choice" data-choice="preview-left" data-side="left" onclick="setSide('left')">Left (your idea)</button>
+</div>
+
+<div class="shell">
+  <nav class="nav">
+    <div class="mark"><i></i>DavoDesk</div>
+    <h4>Work</h4><a>Workspace</a><a>Knowledge</a><a>Reports</a>
+    <h4>Set up</h4><a class="on">Brands</a><a>Team</a><a>Automation</a><a>DavoDesk AI</a><a>Get started</a>
+    <h4>Admin</h4><a>Settings</a>
+  </nav>
+
+  <main class="main">
+    <div class="left">
+    <div class="page-head">
+      <div class="crumbs">Brands / <b>Davochain</b></div>
+      <h1>Chat look</h1>
+      <p class="lead">How your chat looks to customers, on your website and in your app.</p>
+    </div>
+
+      <section class="form-col" id="form">
+        <div class="card">
+          <h3>Logo</h3>
+          <p class="desc">Shown in the chat's header and beside the bot's replies.</p>
+          <div class="row">
+            <span class="logo-tile" style="width:52px;height:52px;border-radius:12px">
+              <svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="var(--brand)"/><path d="M12.2 12.6a3.6 3.6 0 0 1 3.6-3.6h2.4a3.6 3.6 0 0 1 0 7.2h-1.4" stroke="#fff" stroke-width="2.4" fill="none" stroke-linecap="round"/><path d="M19.8 19.4a3.6 3.6 0 0 1-3.6 3.6h-2.4a3.6 3.6 0 0 1 0-7.2h1.4" stroke="#fff" stroke-width="2.4" fill="none" stroke-linecap="round"/></svg>
+              <span class="initial" style="font-size:22px">D</span>
+            </span>
+            <span class="file-name" id="logo-file">davochain-logo.png · resized to 256 px</span>
+            <button class="btn">Replace</button>
+            <button class="btn" id="logo-remove" onclick="toggleLogo(this)">Remove</button>
+          </div>
+          <div class="field">
+            <label>Header logo <span style="font-weight:400;color:var(--ink-3)">· apps only</span></label>
+            <div class="row"><span class="wordmark-chip app">davochain</span><button class="btn">Replace</button></div>
+            <div class="help">A wide wordmark for the coloured header in your app.</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Bot</h3>
+          <p class="desc">The name your customers see on the bot's replies, next to your logo.</p>
+          <div class="field">
+            <label for="bot-name">Bot's name</label>
+            <input class="input" id="bot-name" value="Davochain bot" oninput="setName(this.value)">
+            <div class="help">Left empty, it reads “DavoDesk AI”. Answers the AI wrote carry ✦.</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>On your website</h3>
+          <p class="desc">Your colour, where the launcher sits, and the links on the chat's home screen.</p>
+          <div class="field">
+            <label>Colour</label>
+            <div class="row swatch-row">
+              <input type="color" id="colour" value="#0e9384" oninput="setColour(this.value)" aria-label="Website colour">
+              <input class="input" id="hex" value="#0E9384" style="max-width:120px" oninput="if(/^#[0-9a-f]{6}$/i.test(this.value))setColour(this.value)">
+            </div>
+            <div class="help">Your launcher, buttons and the customer's own messages.</div>
+          </div>
+          <div class="field">
+            <label>Corners</label>
+            <div class="seg">
+              <button aria-pressed="true" onclick="setCorners('web', 'rounded', this)">Rounded</button>
+              <button aria-pressed="false" onclick="setCorners('web', 'square', this)">Square</button>
+            </div>
+          </div>
+          <div class="field">
+            <label>Launcher</label>
+            <div class="seg" id="launcher-side">
+              <button aria-pressed="false" onclick="setLauncher('left', this)">Bottom left</button>
+              <button aria-pressed="true" onclick="setLauncher('right', this)">Bottom right</button>
+            </div>
+          </div>
+          <div class="field">
+            <label>Links on the home screen</label>
+            <div class="link-row"><span>System status</span><span>status.davochain.com</span></div>
+            <div class="link-row"><span>Fees and limits</span><span>davochain.com/fees</span></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>In your app</h3>
+          <p class="desc">Your app's colour and links, and the lines under your header logo.</p>
+          <div class="field">
+            <label>Colour</label>
+            <label class="same"><input type="checkbox" id="same-colour" checked onchange="setSameColour(this.checked)"> Same as website</label>
+            <div class="row swatch-row" id="app-colour-row" hidden style="margin-top:8px">
+              <input type="color" id="app-colour" value="#0e9384" oninput="setAppColour(this.value)" aria-label="App colour">
+              <input class="input" id="app-hex" value="#0E9384" style="max-width:120px" oninput="if(/^#[0-9a-f]{6}$/i.test(this.value))setAppColour(this.value)">
+            </div>
+          </div>
+          <div class="field">
+            <label>Corners</label>
+            <label class="same"><input type="checkbox" id="same-corners" checked onchange="setSameCorners(this.checked)"> Same as website</label>
+            <div id="app-corners-row" hidden style="margin-top:8px">
+              <div class="seg">
+                <button aria-pressed="true" onclick="setCorners('app', 'rounded', this)">Rounded</button>
+                <button aria-pressed="false" onclick="setCorners('app', 'square', this)">Square</button>
+              </div>
+            </div>
+            <div class="help">Your app's own code can set its colours, fonts and corners; when it does, the code wins.</div>
+          </div>
+          <div class="field">
+            <label>Links on the home screen</label>
+            <label class="same"><input type="checkbox" checked> Same as website</label>
+          </div>
+          <div class="field">
+            <label for="tagline">Tagline</label>
+            <input class="input" id="tagline" value="We usually reply within a few hours" oninput="setText('.tagline', this.value)">
+          </div>
+          <div class="field">
+            <label for="notice">Notice</label>
+            <input class="input" id="notice" value="Chats may be recorded to improve our service." oninput="setText('.notice', this.value)">
+          </div>
+        </div>
+
+        <div class="savebar">
+          <span class="grow">You have unsaved changes.</span>
+          <button class="btn">Discard</button>
+          <button class="btn primary">Save</button>
+        </div>
+      </section>
+    </div>
+
+      <aside class="preview-col">
+        <div class="preview-card preview" data-view="web" id="preview">
+          <div class="preview-head">
+            <b>Preview</b>
+            <div class="seg" id="view-switch">
+              <button aria-pressed="true" onclick="setView('web', this)">Website</button>
+              <button aria-pressed="false" onclick="setView('app', this)">App</button>
+            </div>
+          </div>
+
+          <div class="stage" id="stage">
+            <div class="fit web web-only">
+              <div class="site" id="site" data-side="right">
+                <div class="bar">davochain.com</div>
+                <div class="skel"><i style="width:56%"></i><i style="width:82%"></i><i style="width:74%"></i><i style="width:40%"></i></div>
+                <div class="panel">
+                  <div class="head">
+                    <span class="logo-tile"><svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="var(--brand)"/><path d="M12.2 12.6a3.6 3.6 0 0 1 3.6-3.6h2.4a3.6 3.6 0 0 1 0 7.2h-1.4" stroke="#fff" stroke-width="2.4" fill="none" stroke-linecap="round"/><path d="M19.8 19.4a3.6 3.6 0 0 1-3.6 3.6h-2.4a3.6 3.6 0 0 1 0-7.2h1.4" stroke="#fff" stroke-width="2.4" fill="none" stroke-linecap="round"/></svg><span class="initial">D</span></span>
+                    <span class="name">Davochain</span><span class="x">✕</span>
+                  </div>
+                  <div class="body thread">
+                    <div class="who"><span class="logo-tile"><svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="var(--brand)"/><path d="M12.2 12.6a3.6 3.6 0 0 1 3.6-3.6h2.4a3.6 3.6 0 0 1 0 7.2h-1.4" stroke="#fff" stroke-width="2.4" fill="none" stroke-linecap="round"/><path d="M19.8 19.4a3.6 3.6 0 0 1-3.6 3.6h-2.4a3.6 3.6 0 0 1 0-7.2h1.4" stroke="#fff" stroke-width="2.4" fill="none" stroke-linecap="round"/></svg><span class="initial">D</span></span><span class="bot-name">Davochain bot</span></div>
+                    <div class="msg them">Hi Chidi, how can we help today?</div>
+                    <div class="msg me">How do I reset my wallet PIN?</div>
+                    <div class="who"><span class="logo-tile"><svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="var(--brand)"/><path d="M12.2 12.6a3.6 3.6 0 0 1 3.6-3.6h2.4a3.6 3.6 0 0 1 0 7.2h-1.4" stroke="#fff" stroke-width="2.4" fill="none" stroke-linecap="round"/><path d="M19.8 19.4a3.6 3.6 0 0 1-3.6 3.6h-2.4a3.6 3.6 0 0 1 0-7.2h1.4" stroke="#fff" stroke-width="2.4" fill="none" stroke-linecap="round"/></svg><span class="initial">D</span></span><span class="bot-name">Davochain bot</span><span class="ai" title="Written by AI">✦</span></div>
+                    <div class="msg them">Open Settings → Security → Reset PIN. We'll text you a code to confirm it's you.<br><span class="source">Resetting your PIN</span></div>
+                    <div class="msg them">Did this solve it?<div class="choices"><span>Yes</span><span>No, talk to a person</span></div></div>
+                  </div>
+                  <div class="composer">Write a message… <b>➤</b></div>
+                </div>
+                <div class="launcher">⌄</div>
+              </div>
+            </div>
+
+            <div class="fit app app-only">
+              <div class="phone">
+                <div class="screen">
+                  <div class="phone-status"><span>9:41</span><span>▮▮▮ ◔</span></div>
+                  <div class="apphead">
+                    <div class="top">‹ <span>davochain</span></div>
+                    <div class="tagline">We usually reply within a few hours</div>
+                  </div>
+                  <div class="notice">Chats may be recorded to improve our service.</div>
+                  <div class="body thread">
+                    <div class="who"><span class="logo-tile"><svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="var(--brand)"/><path d="M12.2 12.6a3.6 3.6 0 0 1 3.6-3.6h2.4a3.6 3.6 0 0 1 0 7.2h-1.4" stroke="#fff" stroke-width="2.4" fill="none" stroke-linecap="round"/><path d="M19.8 19.4a3.6 3.6 0 0 1-3.6 3.6h-2.4a3.6 3.6 0 0 1 0-7.2h1.4" stroke="#fff" stroke-width="2.4" fill="none" stroke-linecap="round"/></svg><span class="initial">D</span></span><span class="bot-name">Davochain bot</span></div>
+                    <div class="msg them">Hi Chidi, how can we help today?</div>
+                    <div class="msg me">How do I reset my wallet PIN?</div>
+                    <div class="who"><span class="logo-tile"><svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="var(--brand)"/><path d="M12.2 12.6a3.6 3.6 0 0 1 3.6-3.6h2.4a3.6 3.6 0 0 1 0 7.2h-1.4" stroke="#fff" stroke-width="2.4" fill="none" stroke-linecap="round"/><path d="M19.8 19.4a3.6 3.6 0 0 1-3.6 3.6h-2.4a3.6 3.6 0 0 1 0-7.2h1.4" stroke="#fff" stroke-width="2.4" fill="none" stroke-linecap="round"/></svg><span class="initial">D</span></span><span class="bot-name">Davochain bot</span><span class="ai" title="Written by AI">✦</span></div>
+                    <div class="msg them">Open Settings → Security → Reset PIN. We'll text you a code to confirm it's you.<br><span class="source">Resetting your PIN</span></div>
+                    <div class="msg them">Did this solve it?<div class="choices"><span>Yes</span><span>No, talk to a person</span></div></div>
+                  </div>
+                  <div class="composer" style="margin:8px 10px 6px">Write a message… <b>➤</b></div>
+                  <div class="powered">Powered by DavoDesk</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="caption">
+          <p>Live: follows your changes before you save. Desktop only: hidden on screens under 1280 px wide.</p>
+          <p class="app-note" hidden>Your app's developers can change its colours and fonts in code; this shows DavoDesk's settings.</p>
+        </div>
+      </aside>
+  </main>
+</div>
+
+<script>
+  const all = (selector) => document.querySelectorAll(selector);
+  const preview = document.getElementById('preview');
+  const stage = document.getElementById('stage');
+
+  /** Scales the visible preview to fit the stage, whatever the window's height. */
+  function fit() {
+    all('.fit').forEach((box) => {
+      if (!box.offsetWidth) return;
+      const scale = Math.min(1, (stage.clientWidth - 24) / box.offsetWidth, (stage.clientHeight - 24) / box.offsetHeight);
+      box.style.setProperty('--s', String(scale));
+    });
+  }
+  new ResizeObserver(fit).observe(stage);
+
+  function setName(value) {
+    all('.bot-name').forEach((el) => (el.textContent = value.trim() || 'DavoDesk AI'));
+  }
+  function setColour(value) {
+    document.documentElement.style.setProperty('--brand-web', value);
+    if (document.getElementById('same-colour').checked) setAppColour(value, true);
+    document.documentElement.style.setProperty('--brand', value);
+    document.getElementById('colour').value = value;
+    const hex = document.getElementById('hex');
+    if (document.activeElement !== hex) hex.value = value.toUpperCase();
+  }
+  function setAppColour(value, quiet) {
+    document.documentElement.style.setProperty('--brand-app', value);
+    document.getElementById('app-colour').value = value;
+    const hex = document.getElementById('app-hex');
+    if (document.activeElement !== hex) hex.value = value.toUpperCase();
+    if (!quiet && preview.dataset.view !== 'app') setView('app', document.querySelector('#view-switch button:nth-child(2)'));
+  }
+  function setSameColour(same) {
+    document.getElementById('app-colour-row').hidden = same;
+    setAppColour(same ? document.getElementById('colour').value : document.getElementById('app-colour').value, same);
+  }
+  const corners = { web: 'rounded', app: 'rounded' };
+  function applyCorners() {
+    document.querySelector('.fit.web').dataset.corners = corners.web;
+    document.querySelector('.fit.app').dataset.corners = document.getElementById('same-corners').checked ? corners.web : corners.app;
+  }
+  function showView(view) {
+    if (preview.dataset.view !== view) setView(view, document.querySelector('#view-switch button:nth-child(' + (view === 'app' ? 2 : 1) + ')'));
+  }
+  function setCorners(channel, value, button) {
+    corners[channel] = value;
+    press(button.parentElement, button);
+    applyCorners();
+    showView(channel);
+  }
+  function setSameCorners(same) {
+    document.getElementById('app-corners-row').hidden = same;
+    applyCorners();
+    showView('app');
+  }
+  function press(group, button) {
+    group.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b === button)));
+  }
+  function setView(view, button) {
+    preview.dataset.view = view;
+    press(document.getElementById('view-switch'), button);
+    document.querySelector('.app-note').hidden = view !== 'app';
+    fit();
+  }
+  function setLauncher(side, button) {
+    document.getElementById('site').dataset.side = side;
+    press(document.getElementById('launcher-side'), button);
+  }
+  function setText(selector, value) {
+    all(selector).forEach((el) => (el.textContent = value));
+  }
+  function toggleLogo(button) {
+    const off = !document.body.classList.contains('no-logo');
+    document.body.classList.toggle('no-logo', off);
+    document.getElementById('logo-file').textContent = off
+      ? 'No logo: your first letter shows instead'
+      : 'davochain-logo.png · resized to 256 px';
+    button.textContent = off ? 'Upload' : 'Remove';
+  }
+  function setSide(side) {
+    document.querySelector('.main').classList.toggle('preview-left', side === 'left');
+    all('.side-choice').forEach((b) => b.classList.toggle('on', b.dataset.side === side));
+    requestAnimationFrame(fit);
+  }
+  applyCorners();
+  fit();
+</script>
+</body>
+</html>
