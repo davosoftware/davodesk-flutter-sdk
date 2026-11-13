@@ -66,8 +66,17 @@ tentative.
     - `fake_async` for timers;
     - one widget test that hosts the SDK's pages inside a framework-Material app, to prove the wrapper works for apps that haven't migrated.
 
+## Checked again 2026-11-13 (Chat look)
+
+Flutter 3.50 shipped on 2026-11-11. The framework's bundled Material library is now
+formally deprecated (this SDK already uses `material_ui`); the other changes are the order
+of `WidgetSpan`s in right-to-left text, soft hyphens, and Android and web build flags.
+None of it changes the SDK. Installed here: Flutter 3.47.5; the floor stays Flutter 3.47 /
+Dart 3.13.
+
 ## Sources
 
+- [Release notes](https://docs.flutter.dev/release/release-notes)
 - [What's new in the docs](https://docs.flutter.dev/release/whats-new)
 - [Breaking changes and migration guides](https://docs.flutter.dev/release/breaking-changes)
 - [Migrate to standalone material_ui and cupertino_ui packages](https://docs.flutter.dev/release/breaking-changes/material-ui-and-cupertino-ui)

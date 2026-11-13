@@ -14,8 +14,8 @@ Flutter 3.47 or later (Dart 3.13).
 2. **Give your backend an identity endpoint.** A DavoDesk session needs an identity token
    that *your* backend signs for the signed-in user (HS256, your signing key's `kid` in
    the header, a few minutes long). The app never holds the signing secret. See
-   `support-api/docs/HOST_APP_INTEGRATION.md` §2, and `host_api/` in this repo for a
-   working example.
+   `apps/api/docs/HOST_APP_INTEGRATION.md` §2 in the davodesk-apps repo, and `host_api/`
+   in this repo for a working example.
 3. **Initialize once the user signs in:**
 
    ```dart
@@ -149,4 +149,4 @@ when done.
 ## Calling the API directly
 
 Everything the SDK does goes through the public DavoDesk API, so an app may call it
-directly instead: `support-api/docs/HOST_APP_INTEGRATION.md`.
+directly instead: `apps/api/docs/HOST_APP_INTEGRATION.md` in the davodesk-apps repo.
