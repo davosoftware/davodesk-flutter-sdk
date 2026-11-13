@@ -1,3 +1,5 @@
+import 'package:davodesk_flutter/src/domain/models.dart'
+    show ChannelConfig, ChannelLook;
 import 'package:davodesk_flutter/src/ui/core/support_shell.dart';
 import 'package:davodesk_flutter/src/ui/features/contact/contact_page.dart';
 import 'package:davodesk_flutter/src/ui/features/conversation/conversation_view_model.dart';
@@ -26,11 +28,13 @@ const acme = DavoDeskTheme(
   ),
 );
 
-/// The colours [SupportColors.resolve] gives for [theme] under a phone set to [platform].
+/// The colours [SupportColors.resolve] gives for [theme] and the [channel] under a phone
+/// set to [platform].
 Future<SupportColors> resolved(
   WidgetTester tester, {
   Brightness platform = Brightness.light,
   DavoDeskTheme? theme,
+  ChannelConfig? channel,
 }) async {
   late SupportColors colors;
   await tester.pumpWidget(
@@ -38,7 +42,11 @@ Future<SupportColors> resolved(
       data: MediaQueryData(platformBrightness: platform),
       child: Builder(
         builder: (context) {
-          colors = SupportColors.resolve(context, theme: theme);
+          colors = SupportColors.resolve(
+            context,
+            config: channel,
+            theme: theme,
+          );
           return const SizedBox();
         },
       ),
@@ -46,6 +54,15 @@ Future<SupportColors> resolved(
   );
   return colors;
 }
+
+/// An app channel whose look in DavoDesk has [corners].
+ChannelConfig channelWith(DavoDeskCorners? corners) => ChannelConfig(
+  channelId: 'ch_1',
+  type: 'app',
+  brandName: 'Davopay',
+  supportMode: 'ai_triage',
+  appearance: ChannelLook(accentColor: '#1d4ed8', corners: corners),
+);
 
 /// WCAG contrast between two colours.
 double contrast(Color a, Color b) {
@@ -310,6 +327,35 @@ void main() {
         BorderRadius.zero,
       );
       await contact.finish(tester);
+    });
+
+    testWidgets('takes the channel’s square corners when the app sets none', (
+      tester,
+    ) async {
+      final colors = await resolved(tester, channel: channelWith(.square));
+      expect(colors.corners, DavoDeskCorners.square);
+      expect(colors.corner(16), BorderRadius.zero);
+      // A theme for colours only leaves the corners to DavoDesk.
+      final themed = await resolved(
+        tester,
+        channel: channelWith(.square),
+        theme: acme,
+      );
+      expect(themed.corners, DavoDeskCorners.square);
+    });
+
+    testWidgets('the app’s corners win over the channel’s', (tester) async {
+      final colors = await resolved(
+        tester,
+        channel: channelWith(.square),
+        theme: const DavoDeskTheme(corners: .rounded),
+      );
+      expect(colors.corners, DavoDeskCorners.rounded);
+    });
+
+    testWidgets('rounded when neither says', (tester) async {
+      final colors = await resolved(tester, channel: channelWith(null));
+      expect(colors.corners, DavoDeskCorners.rounded);
     });
 
     testWidgets('rounded by default, and an avatar stays round when square', (

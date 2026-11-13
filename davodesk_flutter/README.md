@@ -53,8 +53,8 @@ Flutter 3.47 or later (Dart 3.13).
 
 The screens run on your app's navigator as full-screen pages. Out of the box they follow
 your app's light or dark setting (the phone's, when your app uses the framework's Material
-rather than `material_ui`), take the accent colour set for the channel in DavoDesk, and use
-DavoDesk's own greys.
+rather than `material_ui`), take the accent colour and the corners set for the channel in
+DavoDesk (its Chat look page), and use DavoDesk's own greys.
 
 To make them match your app, pass a `DavoDeskTheme` to `DavoDesk.initialize`:
 
@@ -91,7 +91,7 @@ await DavoDesk.initialize(
 | `light`, `dark` | The screen colours for each, as `DavoDeskColors` (below). |
 | `fontFamily` | All the text. Without it, your app's font (an app on `material_ui`) or the platform's. |
 | `headingFontFamily` | Page titles, the Home greeting, an article's title and empty states. Without it, `fontFamily`. |
-| `corners` | `DavoDeskCorners.rounded` (the default) or `DavoDeskCorners.square`, for cards, fields, chat bubbles, labels and buttons. Avatars stay round. |
+| `corners` | `DavoDeskCorners.rounded` or `DavoDeskCorners.square`, for cards, fields, chat bubbles, labels and buttons. It beats the corners set in DavoDesk; without either, rounded. Avatars stay round. |
 
 | `DavoDeskColors` | What it paints |
 |---|---|
