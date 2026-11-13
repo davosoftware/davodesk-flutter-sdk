@@ -151,7 +151,9 @@ const _joined = ConversationState(
       id: 'm2',
       text: 'I’ll pass you to the team, who can see your card’s history.',
       label: 'Callie',
+      head: true,
       ai: true,
+      brand: 'Davopay',
     ),
     JoinedItem('Mara'),
     BubbleItem(
@@ -178,7 +180,8 @@ const _choosing = ConversationState(
           'Hello Chukwu 👋, this is Callie from Davopay. Please choose the '
           'option that best matches your request.',
       label: 'Callie',
-      ai: true,
+      head: true,
+      brand: 'Davopay',
     ),
   ],
   choices: [

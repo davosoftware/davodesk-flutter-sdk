@@ -44,13 +44,20 @@ class TicketViewModel extends ChangeNotifier {
   TicketState get state {
     final ticket = _ticket;
     if (ticket == null) return TicketState(failed: _failed, loading: !_failed);
+    final heads = botHeads(ticket.messages);
     return TicketState(
       subject: ticket.subject,
       status: ticket.status,
       reference: referenceOf(ticket.id),
       items: [
-        for (final message in ticket.messages)
-          bubbleOf(message, brand: _config.brandName, ai: _config.aiAgentName),
+        for (final (index, message) in ticket.messages.indexed)
+          bubbleOf(
+            message,
+            brand: _config.brandName,
+            ai: _config.aiAgentName,
+            logoUrl: _config.logoUrl,
+            head: heads[index],
+          ),
       ],
       askRating: ticket.summary.satisfaction?.awaitingRating ?? false,
       reopenable: ticket.reopenable,

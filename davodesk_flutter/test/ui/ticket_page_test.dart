@@ -49,7 +49,7 @@ void main() {
     expect(find.text('Virtual card refund'), findsOneWidget);
     expect(find.text('Reply · #9BBC55'), findsOneWidget);
     expect(find.text('Where is my refund?'), findsOneWidget);
-    expect(find.text('Callie · AI Agent'), findsOneWidget);
+    expect(find.text('Callie'), findsOneWidget);
     expect(find.text('Mara'), findsOneWidget);
     expect(find.text('How was the help?'), findsNothing);
     expect(find.text('Reopen it'), findsNothing);
