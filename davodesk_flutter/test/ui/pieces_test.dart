@@ -77,6 +77,23 @@ void main() {
     expect(who(.automation), 'Davopay team');
   });
 
+  test('heads each run of the bot, and starts a run when the kind changes', () {
+    ChatMessage message(String sender, {bool? ai}) => ChatMessage.fromJson({
+      'id': 'm',
+      'sender_type': sender,
+      'content': 'Hi',
+      'ai_written': ?ai,
+    });
+    final bot = message('bot');
+    final me = message('end_user');
+    expect(botHeads([bot, bot, me, bot]), [true, false, false, true]);
+    final answer = message('bot', ai: true);
+    final greeting = message('bot', ai: false);
+    expect(botHeads([answer, answer, greeting]), [true, false, true]);
+    // An API from before the field: the same kind as a greeting.
+    expect(botHeads([bot, greeting]), [true, false]);
+  });
+
   testWidgets('BrandTile shows the initial when the image errors', (
     tester,
   ) async {
@@ -154,6 +171,93 @@ void main() {
       ),
     );
     expect(find.text('S'), findsOneWidget);
+  });
+
+  testWidgets(
+    "a head shows the logo, the bot's name and ✦ when the AI wrote it",
+    (tester) async {
+      const logo = 'https://cdn.test/logo.png';
+      await tester.pumpWidget(
+        host(
+          const MessageBubble(
+            item: BubbleItem(
+              id: 'm1',
+              text: 'Refunds take 3 days.',
+              label: 'Callie',
+              head: true,
+              ai: true,
+              brand: 'Davopay',
+              logoUrl: logo,
+            ),
+            maxWidth: 300,
+          ),
+        ),
+      );
+      final tile = find.byType(BrandTile);
+      expect(tester.getSize(tile), const Size(18, 18));
+      expect(
+        find.descendant(
+          of: tile,
+          matching: find.byWidgetPredicate(
+            (widget) =>
+                widget is Image &&
+                widget.image is NetworkImage &&
+                (widget.image as NetworkImage).url == logo,
+          ),
+        ),
+        findsOneWidget,
+      );
+      expect(find.text('Callie'), findsOneWidget);
+      expect(find.bySemanticsLabel('Written by AI'), findsOneWidget);
+      expect(find.textContaining('AI Agent'), findsNothing);
+    },
+  );
+
+  testWidgets("a head without a logo shows the brand's initial in its colour", (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      host(
+        const MessageBubble(
+          item: BubbleItem(
+            id: 'm1',
+            text: 'Hi Chukwu, how can we help today?',
+            label: 'Callie',
+            head: true,
+            brand: 'Davopay',
+          ),
+          maxWidth: 300,
+        ),
+      ),
+    );
+    final initial = find.descendant(
+      of: find.byType(BrandTile),
+      matching: find.text('D'),
+    );
+    expect(initial, findsOneWidget);
+    expect(tester.widget<Text>(initial).style?.color, blue);
+    expect(find.text('Callie'), findsOneWidget);
+    // People wrote the greeting: no ✦.
+    expect(find.bySemanticsLabel(RegExp('Written by AI')), findsNothing);
+  });
+
+  testWidgets('a bubble that is not a head has no label row', (tester) async {
+    final followUp = bubbleOf(
+      ChatMessage.fromJson({
+        'id': 'm2',
+        'sender_type': 'bot',
+        'content': 'Anything else?',
+        'ai_written': true,
+      }),
+      brand: 'Davopay',
+      ai: 'Callie',
+      logoUrl: 'https://cdn.test/logo.png',
+    );
+    await tester.pumpWidget(host(MessageBubble(item: followUp, maxWidth: 300)));
+    expect(find.text('Anything else?'), findsOneWidget);
+    expect(find.byType(BrandTile), findsNothing);
+    expect(find.text('Callie'), findsNothing);
+    expect(find.bySemanticsLabel(RegExp('Written by AI')), findsNothing);
   });
 
   testWidgets('PoweredBy shows the DavoDesk mark and words', (tester) async {

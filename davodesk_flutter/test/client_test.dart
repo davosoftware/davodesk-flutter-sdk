@@ -38,6 +38,24 @@ void main() {
     },
   );
 
+  test(
+    'forgetConfig reads the config again, but keeps a read on its way',
+    () async {
+      final (:client, :api, sockets: _, identities: _) = arrange();
+      final reading = client.config();
+      // Two openings at once: one read.
+      client.forgetConfig();
+      expect(identical(client.config(), reading), isTrue);
+      await reading;
+      expect(api.configReads, 1);
+
+      client.forgetConfig();
+      await client.config();
+      expect(api.configReads, 2);
+      client.dispose();
+    },
+  );
+
   test('the conversation follows the chat, and startNew begins anew', () async {
     final (:client, api: _, :sockets, identities: _) = arrange();
     await client.start();

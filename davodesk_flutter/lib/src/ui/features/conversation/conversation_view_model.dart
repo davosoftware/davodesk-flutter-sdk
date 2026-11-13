@@ -28,14 +28,19 @@ sealed class ChatItem {
   const ChatItem();
 }
 
-/// A message: the customer's ([mine]), or someone's under a [label] (the AI's carry
-/// [ai]), with the articles it came from and its files.
+/// A message: the customer's ([mine]), a person's under their [label], or the bot's. The
+/// first of a run of the bot's ([head]) shows the brand's tile ([logoUrl], else the
+/// initial of [brand]), the bot's name as its [label], and ✦ when the AI wrote it ([ai]).
+/// With the articles it came from and its files.
 final class const BubbleItem({
   required final String id,
   required final String text,
   final bool mine = false,
   final String? label,
+  final bool head = false,
   final bool ai = false,
+  final String? brand,
+  final String? logoUrl,
   final List<String> sources = const [],
   final List<Attachment> files = const [],
 }) extends ChatItem {
@@ -125,6 +130,7 @@ class ConversationViewModel extends ChangeNotifier {
     final joinedAt = person == null
         ? -1
         : (firstStaff >= 0 ? firstStaff : chat.messages.length);
+    final heads = botHeads(chat.messages);
     return ConversationState(
       title: person ?? ai,
       subtitle: closed
@@ -139,7 +145,13 @@ class ConversationViewModel extends ChangeNotifier {
       items: [
         for (final (index, message) in chat.messages.indexed) ...[
           if (index == joinedAt) JoinedItem(person!),
-          bubbleOf(message, brand: brand, ai: ai),
+          bubbleOf(
+            message,
+            brand: brand,
+            ai: ai,
+            logoUrl: _config.logoUrl,
+            head: heads[index],
+          ),
         ],
         if (joinedAt == chat.messages.length) JoinedItem(person!),
       ],
@@ -225,26 +237,46 @@ class ConversationViewModel extends ChangeNotifier {
   }
 }
 
-/// A message as a bubble: the AI's under its name, a person's under theirs.
+/// Which messages open a run of the bot's, and so carry its tile and name: the bot's
+/// first, one after anyone else's, and one whose kind (the AI's or not) changes.
+List<bool> botHeads(List<ChatMessage> messages) => [
+  for (final (index, message) in messages.indexed)
+    message.senderType == SenderType.bot &&
+        (index == 0 ||
+            messages[index - 1].senderType != SenderType.bot ||
+            (messages[index - 1].aiWritten == true) !=
+                (message.aiWritten == true)),
+];
+
+/// A message as a bubble: a person's under their name; the bot's, when it [head]s a run,
+/// under the brand's tile ([logoUrl], or the initial of [brand]) and the bot's name [ai].
 BubbleItem bubbleOf(
   ChatMessage message, {
   required String brand,
   required String ai,
-}) => BubbleItem(
-  id: message.id,
-  text: message.content,
-  mine: message.senderType == SenderType.endUser,
-  label: switch (message.senderType) {
-    .endUser => null,
-    .bot => ai,
-    _ => speakerName(
-      message.senderType,
-      message.senderDisplayName,
-      brand: brand,
-      aiName: ai,
-    ),
-  },
-  ai: message.senderType == SenderType.bot,
-  sources: [for (final source in message.botSources) source.title],
-  files: message.attachments,
-);
+  String? logoUrl,
+  bool head = false,
+}) {
+  final bot = message.senderType == SenderType.bot;
+  return BubbleItem(
+    id: message.id,
+    text: message.content,
+    mine: message.senderType == SenderType.endUser,
+    label: switch (message.senderType) {
+      .endUser => null,
+      .bot => head ? ai : null,
+      _ => speakerName(
+        message.senderType,
+        message.senderDisplayName,
+        brand: brand,
+        aiName: ai,
+      ),
+    },
+    head: bot && head,
+    ai: bot && message.aiWritten == true,
+    brand: bot ? brand : null,
+    logoUrl: bot ? logoUrl : null,
+    sources: [for (final source in message.botSources) source.title],
+    files: message.attachments,
+  );
+}

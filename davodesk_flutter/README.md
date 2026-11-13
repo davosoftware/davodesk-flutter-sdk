@@ -14,8 +14,8 @@ Flutter 3.47 or later (Dart 3.13).
 2. **Give your backend an identity endpoint.** A DavoDesk session needs an identity token
    that *your* backend signs for the signed-in user (HS256, your signing key's `kid` in
    the header, a few minutes long). The app never holds the signing secret. See
-   `support-api/docs/HOST_APP_INTEGRATION.md` §2, and `host_api/` in this repo for a
-   working example.
+   `apps/api/docs/HOST_APP_INTEGRATION.md` §2 in the davodesk-apps repo, and `host_api/`
+   in this repo for a working example.
 3. **Initialize once the user signs in:**
 
    ```dart
@@ -53,8 +53,11 @@ Flutter 3.47 or later (Dart 3.13).
 
 The screens run on your app's navigator as full-screen pages. Out of the box they follow
 your app's light or dark setting (the phone's, when your app uses the framework's Material
-rather than `material_ui`), take the accent colour set for the channel in DavoDesk, and use
-DavoDesk's own greys.
+rather than `material_ui`), take the accent colour and the corners set for the channel in
+DavoDesk (its Chat look page), and use DavoDesk's own greys. A look saved in DavoDesk shows
+the next time support opens, with no new release of your app. Support waits up to two
+seconds for it; on a slower network it opens with the last look, and the new one shows the
+time after.
 
 To make them match your app, pass a `DavoDeskTheme` to `DavoDesk.initialize`:
 
@@ -91,7 +94,7 @@ await DavoDesk.initialize(
 | `light`, `dark` | The screen colours for each, as `DavoDeskColors` (below). |
 | `fontFamily` | All the text. Without it, your app's font (an app on `material_ui`) or the platform's. |
 | `headingFontFamily` | Page titles, the Home greeting, an article's title and empty states. Without it, `fontFamily`. |
-| `corners` | `DavoDeskCorners.rounded` (the default) or `DavoDeskCorners.square`, for cards, fields, chat bubbles, labels and buttons. Avatars stay round. |
+| `corners` | `DavoDeskCorners.rounded` or `DavoDeskCorners.square`, for cards, fields, chat bubbles, labels and buttons. It beats the corners set in DavoDesk; without either, rounded. Avatars stay round. |
 
 | `DavoDeskColors` | What it paints |
 |---|---|
@@ -148,4 +151,4 @@ when done.
 ## Calling the API directly
 
 Everything the SDK does goes through the public DavoDesk API, so an app may call it
-directly instead: `support-api/docs/HOST_APP_INTEGRATION.md`.
+directly instead: `apps/api/docs/HOST_APP_INTEGRATION.md` in the davodesk-apps repo.

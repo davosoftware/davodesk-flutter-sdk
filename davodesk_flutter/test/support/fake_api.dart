@@ -1,6 +1,7 @@
 /// The DavoDesk API as the SDK's client and screen tests meet it.
 library;
 
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:davodesk_flutter/davodesk_flutter.dart';
@@ -43,6 +44,12 @@ class FakeApi {
 
   /// The channel's settings beyond the required ones, such as `appearance`.
   Map<String, Object?> configExtras = {};
+
+  /// The status the next config read is refused with.
+  int? refuseNextConfig;
+
+  /// While set, config reads wait for it: a slow network.
+  Completer<void>? holdConfig;
 
   /// The customer's name in the session's answer.
   String? customerName = 'Ada Lovelace';
@@ -124,6 +131,11 @@ class FakeApi {
     switch ((request.method, path)) {
       case ('GET', '/v1/channels/ch_1/config'):
         configReads++;
+        await holdConfig?.future;
+        if (refuseNextConfig case final status?) {
+          refuseNextConfig = null;
+          return json({'code': 'UNAVAILABLE', 'message': 'No'}, status);
+        }
         return json({
           'channel_id': 'ch_1',
           'type': 'app',

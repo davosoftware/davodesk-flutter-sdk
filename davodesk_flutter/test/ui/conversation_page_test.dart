@@ -27,6 +27,7 @@ Map<String, Object?> bot(
   String content, {
   List<(String, String)> options = const [],
   bool confirm = false,
+  bool? ai,
 }) => {
   'id': id,
   'sender_type': 'bot',
@@ -35,6 +36,7 @@ Map<String, Object?> bot(
     for (final (key, label) in options) {'key': key, 'label': label},
   ],
   'confirmation_requested': confirm,
+  'ai_written': ?ai,
 };
 
 Map<String, Object?> me(String id, String content) => {
@@ -85,9 +87,9 @@ void main() {
     'the header names the AI, then the person who joined with the reference',
     (tester) async {
       final (page, socket) = await open(tester);
-      expect(find.text('Callie'), findsOneWidget);
+      // The header, and the greeting's run head.
+      expect(find.text('Callie'), findsNWidgets(2));
       expect(find.text('The team can also help'), findsOneWidget);
-      expect(find.text('Callie · AI Agent'), findsOneWidget);
       expect(find.text('Ask a question…'), findsOneWidget);
 
       socket
@@ -102,6 +104,32 @@ void main() {
       expect(find.text('Davopay team · #9BBC55'), findsOneWidget);
       expect(find.text('Mara joined'), findsOneWidget);
       expect(find.text('Write a message…'), findsOneWidget);
+      await page.finish(tester);
+    },
+  );
+
+  testWidgets(
+    "a greeting and an AI answer with its follow-up show the bot's name twice and ✦ once",
+    (tester) async {
+      final (page, _) = await open(
+        tester,
+        first: snapshot(
+          messages: [
+            bot('m1', 'Hi Chukwu, how can we help today?', ai: false),
+            me('m2', 'Where is my refund?'),
+            bot('m3', 'Refunds take 3 days to reach your card.', ai: true),
+            bot('m4', 'You can see it under Payments.', ai: true),
+          ],
+        ),
+      );
+      final inChat = find.byType(ListView);
+      expect(
+        find.descendant(of: inChat, matching: find.text('Callie')),
+        findsNWidgets(2),
+      );
+      // The list reads each bubble as one: "Callie, Written by AI, Refunds take…".
+      expect(find.bySemanticsLabel(RegExp('Written by AI')), findsOneWidget);
+      expect(find.textContaining('AI Agent'), findsNothing);
       await page.finish(tester);
     },
   );

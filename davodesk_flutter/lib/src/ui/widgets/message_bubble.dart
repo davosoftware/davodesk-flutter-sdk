@@ -2,9 +2,11 @@ import 'package:material_ui/material_ui.dart';
 
 import '../features/conversation/conversation_view_model.dart';
 import '../theme.dart';
+import 'brand_tile.dart';
 
-/// One message: the customer's on the right in the accent; everyone else's on the left
-/// under who wrote it, the AI's as "{name} · AI Agent", with the articles it came from.
+/// One message: the customer's on the right in the accent; everyone else's on the left,
+/// a person's under their name, and the first of a run of the bot's under the brand's
+/// tile, the bot's name and ✦ when the AI wrote it; with the articles it came from.
 class MessageBubble extends StatelessWidget {
   /// Creates the bubble for [item], at most [maxWidth] wide.
   const MessageBubble({
@@ -66,11 +68,14 @@ class MessageBubble extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   spacing: 6,
                   children: [
-                    if (item.ai)
-                      Icon(
-                        Icons.auto_awesome,
-                        size: 14,
-                        color: colors.accentInk,
+                    if (item.head)
+                      // The bot's name follows, so the tile says nothing to a screen reader.
+                      ExcludeSemantics(
+                        child: BrandTile(
+                          logoUrl: item.logoUrl,
+                          name: item.brand ?? label,
+                          size: 18,
+                        ),
                       )
                     else
                       Container(
@@ -93,20 +98,8 @@ class MessageBubble extends StatelessWidget {
                         ),
                       ),
                     Flexible(
-                      child: Text.rich(
-                        TextSpan(
-                          text: label,
-                          children: [
-                            if (item.ai)
-                              TextSpan(
-                                text: ' · AI Agent',
-                                style: TextStyle(
-                                  color: colors.ink2,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                          ],
-                        ),
+                      child: Text(
+                        label,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
@@ -116,6 +109,16 @@ class MessageBubble extends StatelessWidget {
                         ),
                       ),
                     ),
+                    if (item.head && item.ai)
+                      Text(
+                        '✦',
+                        semanticsLabel: 'Written by AI',
+                        style: TextStyle(
+                          color: colors.accentInk,
+                          fontSize: 12,
+                          height: 1,
+                        ),
+                      ),
                   ],
                 ),
               ),
