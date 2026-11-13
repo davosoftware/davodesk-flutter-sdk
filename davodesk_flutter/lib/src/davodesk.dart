@@ -144,9 +144,12 @@ abstract final class DavoDesk {
     final support = _support;
     final config = await support.config();
     if (config == null || !context.mounted) return;
-    if (config.answersOnly) return support.open(context, const HelpPage());
+    if (config.answersOnly) {
+      support._push(context, config, const HelpPage());
+      return;
+    }
     unawaited(support.client.send(text).then((_) {}, onError: (Object _) {}));
-    return support.open(context, const ConversationPage());
+    support._push(context, config, const ConversationPage());
   }
 
   /// Opens one of the customer's tickets, such as from a push notification.
@@ -179,7 +182,10 @@ class _Support {
   String? _announced;
   bool _toldTokenFailed = false;
 
+  /// The channel's settings, read again for each opening: a look saved in DavoDesk shows
+  /// the next time support opens.
   Future<ChannelConfig?> config() async {
+    client.forgetConfig();
     try {
       return await client.config();
     } on Object catch (error) {

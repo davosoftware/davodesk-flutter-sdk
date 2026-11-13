@@ -94,6 +94,7 @@ class DavoDeskClient {
   final _unread = ValueNotifier(0);
 
   Future<ChannelConfig>? _config;
+  bool _readingConfig = false;
   bool? _hasHelpCentre;
   bool _connected = false;
 
@@ -115,8 +116,14 @@ class DavoDeskClient {
   /// Every change in the customer's session, such as a refused identity token.
   Stream<SessionState> get sessionChanges => _session.states;
 
-  /// The channel's public settings, read once.
+  /// The channel's public settings, read once until [forgetConfig].
   Future<ChannelConfig> config() => _config ??= _readConfig();
+
+  /// Drops the settings read, so the next [config] reads them again: a look saved in
+  /// DavoDesk shows the next time support opens. A read on its way is kept.
+  void forgetConfig() {
+    if (!_readingConfig) _config = null;
+  }
 
   /// Opens the customer's session and the live chat, and reads their tickets. A brand
   /// that only answers from its articles has no chat and no tickets.
@@ -302,11 +309,14 @@ class DavoDeskClient {
   }
 
   Future<ChannelConfig> _readConfig() async {
+    _readingConfig = true;
     try {
       return await _api.config(_channelId);
     } on Object {
       _config = null;
       rethrow;
+    } finally {
+      _readingConfig = false;
     }
   }
 

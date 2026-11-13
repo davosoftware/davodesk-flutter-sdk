@@ -111,6 +111,46 @@ void main() {
     await finish(tester);
   });
 
+  testWidgets('opening support again reads the channel’s look again', (
+    tester,
+  ) async {
+    final (:context, :api, :sockets, events: _) = await host(
+      tester,
+      api: FakeApi()..configExtras = {'ai_agent_name': 'Callie'},
+    );
+    // Read once already, for the unread badge; then once per opening.
+    final before = api.configReads;
+    DavoDesk.ask(context, 'Where is my order?');
+    await tester.pumpAndSettle();
+    sockets.single.trigger('session', {
+      'id': 'cs1',
+      'status': 'answers',
+      'ticket_id': null,
+      'messages': <Object?>[],
+    });
+    await tester.pumpAndSettle();
+    expect(find.text('Callie'), findsOneWidget);
+    expect(api.configReads, before + 1);
+    Navigator.of(context).popUntil((route) => route.isFirst);
+    await tester.pumpAndSettle();
+
+    // Saved in DavoDesk while the app stays open.
+    api.configExtras = {'ai_agent_name': 'Ada'};
+    DavoDesk.ask(context, 'And my refund?');
+    await tester.pumpAndSettle();
+    expect(find.text('Ada'), findsOneWidget);
+    expect(find.text('Callie'), findsNothing);
+    expect(api.configReads, before + 2);
+
+    Navigator.of(context).popUntil((route) => route.isFirst);
+    await tester.pumpAndSettle();
+    DavoDesk.show(context);
+    await tester.pumpAndSettle();
+    expect(find.text('How can we help?'), findsOneWidget);
+    expect(api.configReads, before + 3);
+    await finish(tester);
+  });
+
   testWidgets('openTicket opens that ticket', (tester) async {
     final (:context, api: _, sockets: _, events: _) = await host(
       tester,

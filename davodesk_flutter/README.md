@@ -54,7 +54,8 @@ Flutter 3.47 or later (Dart 3.13).
 The screens run on your app's navigator as full-screen pages. Out of the box they follow
 your app's light or dark setting (the phone's, when your app uses the framework's Material
 rather than `material_ui`), take the accent colour and the corners set for the channel in
-DavoDesk (its Chat look page), and use DavoDesk's own greys.
+DavoDesk (its Chat look page), and use DavoDesk's own greys. A look saved in DavoDesk shows
+the next time support opens, with no new release of your app.
 
 To make them match your app, pass a `DavoDeskTheme` to `DavoDesk.initialize`:
 
