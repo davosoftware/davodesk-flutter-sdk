@@ -3,6 +3,9 @@ import 'package:material_ui/material_ui.dart' show Theme, ThemeData;
 
 import '../domain/models.dart';
 
+// The channel's look reads corners too, so their type lives with the API's shapes.
+export '../domain/models.dart' show DavoDeskCorners;
+
 /// What DavoDesk's screens use when neither the app nor the channel sets an accent.
 const defaultAccent = Color(0xFF1D4ED8);
 
@@ -24,15 +27,6 @@ class const DavoDeskTheme({
 }) {
   /// Creates a [DavoDeskTheme].
   this;
-}
-
-/// The corners of cards, fields, bubbles, chips and buttons; avatars stay round.
-enum DavoDeskCorners {
-  /// DavoDesk's rounded corners.
-  rounded,
-
-  /// Square corners.
-  square,
 }
 
 /// The screen colours for light or for dark; a colour left out keeps DavoDesk's.

@@ -42,11 +42,23 @@ class const RequestSubject(final String key, final String label) {
   };
 }
 
-/// A channel's look: its colour, title and links.
+/// The corners of cards, fields, bubbles, chips and buttons; avatars stay round.
+enum DavoDeskCorners {
+  /// DavoDesk's rounded corners.
+  rounded,
+
+  /// Square corners.
+  square,
+}
+
+/// A channel's look: its colour, corners, title and links.
 class const ChannelLook({
   required final String accentColor,
   final String? title,
   final List<HomeLink> homeLinks = const [],
+
+  /// As set in DavoDesk; null from an API that predates it.
+  final DavoDeskCorners? corners,
 }) {
   /// Creates a [ChannelLook].
   this;
@@ -58,6 +70,11 @@ class const ChannelLook({
     homeLinks: [
       for (final link in _maps(json['home_links'])) ?HomeLink.fromJson(link),
     ],
+    corners: switch (json['corners']) {
+      'square' => .square,
+      'rounded' => .rounded,
+      _ => null,
+    },
   );
 }
 
@@ -202,6 +219,10 @@ class const ChatMessage({
   final List<ChatOption> options = const [],
   final List<Attachment> attachments = const [],
   final DateTime? sentAt,
+
+  /// DavoDesk AI wrote this bot message; null from an API that predates it, which earns
+  /// no ✦ rather than a guess.
+  final bool? aiWritten,
 }) {
   /// Creates a [ChatMessage].
   this;
@@ -228,6 +249,10 @@ class const ChatMessage({
         ?Attachment.fromJson(attachment),
     ],
     sentAt: _date(json['sent_at']),
+    aiWritten: switch (json['ai_written']) {
+      final bool written => written,
+      _ => null,
+    },
   );
 }
 
