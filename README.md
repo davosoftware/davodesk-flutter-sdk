@@ -1,5 +1,9 @@
 # DavoDesk for Flutter
 
+**Adding DavoDesk to your app?** Start with [`davodesk_flutter/README.md`](davodesk_flutter/README.md):
+what you need from DavoDesk, the package, your backend's identity endpoint, and the calls.
+What changed lately is in [`davodesk_flutter/CHANGELOG.md`](davodesk_flutter/CHANGELOG.md).
+
 Three separate projects, each with its own dependencies, tests and README:
 
 | Folder | What it is | Who uses it |
@@ -19,10 +23,11 @@ example_app ──(3) open a session with the token, chat, tickets, help ──>
 The signing secret stays on the server. A mobile app never holds it.
 
 The SDK is optional: everything it does goes through the public DavoDesk API, which a
-developer can call directly instead (`apps/api/docs/HOST_APP_INTEGRATION.md` in the
-davodesk-apps repo).
+developer can call directly instead (the API reference:
+`https://app.davodesk.com/developers/api`).
 
-The screens can take the app's own look: its colours for light and dark, its fonts and
-square or rounded corners (`DavoDeskTheme`, in the SDK's README under "The look").
+The screens take their look from the brand's Chat look page in DavoDesk (logo, bot name,
+colour, corners), and the app's code can set its own colours for light and dark, fonts and
+corners (`DavoDeskTheme`, in the SDK's README under "The look").
 
 The design is in [`docs/specs/`](docs/specs/).
