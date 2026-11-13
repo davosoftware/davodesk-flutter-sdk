@@ -55,7 +55,9 @@ The screens run on your app's navigator as full-screen pages. Out of the box the
 your app's light or dark setting (the phone's, when your app uses the framework's Material
 rather than `material_ui`), take the accent colour and the corners set for the channel in
 DavoDesk (its Chat look page), and use DavoDesk's own greys. A look saved in DavoDesk shows
-the next time support opens, with no new release of your app.
+the next time support opens, with no new release of your app. Support waits up to two
+seconds for it; on a slower network it opens with the last look, and the new one shows the
+time after.
 
 To make them match your app, pass a `DavoDeskTheme` to `DavoDesk.initialize`:
 

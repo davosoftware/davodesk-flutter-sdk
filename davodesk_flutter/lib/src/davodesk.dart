@@ -185,9 +185,8 @@ class _Support {
   /// The channel's settings, read again for each opening: a look saved in DavoDesk shows
   /// the next time support opens.
   Future<ChannelConfig?> config() async {
-    client.forgetConfig();
     try {
-      return await client.config();
+      return await client.configForOpening();
     } on Object catch (error) {
       _emit(DavoDeskError('CHANNEL_UNAVAILABLE', '$error'));
       return null;

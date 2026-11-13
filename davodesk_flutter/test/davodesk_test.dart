@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:davodesk_flutter/davodesk_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -150,6 +152,60 @@ void main() {
     expect(api.configReads, before + 3);
     await finish(tester);
   });
+
+  testWidgets(
+    'a look that cannot be read again opens support with the last one',
+    (tester) async {
+      final (:context, :api, :sockets, :events) = await host(
+        tester,
+        api: FakeApi()..configExtras = {'ai_agent_name': 'Callie'},
+      );
+      api.refuseNextConfig = 503;
+      DavoDesk.ask(context, 'Where is my order?');
+      await tester.pumpAndSettle();
+      sockets.single.trigger('session', {
+        'id': 'cs1',
+        'status': 'answers',
+        'ticket_id': null,
+        'messages': <Object?>[],
+      });
+      await tester.pumpAndSettle();
+      expect(find.text('Callie'), findsOneWidget);
+      expect(events.whereType<DavoDeskError>(), isEmpty);
+      await finish(tester);
+    },
+  );
+
+  testWidgets(
+    'a slow look opens support with the last one, without waiting long',
+    (tester) async {
+      final (:context, :api, :sockets, events: _) = await host(
+        tester,
+        api: FakeApi()..configExtras = {'ai_agent_name': 'Callie'},
+      );
+      final before = api.configReads;
+      final slow = api.holdConfig = Completer<void>();
+      api.configExtras = {'ai_agent_name': 'Ada'};
+      DavoDesk.ask(context, 'Where is my order?');
+      await tester.pump(const Duration(seconds: 2));
+      await tester.pumpAndSettle();
+      expect(find.text('Callie'), findsOneWidget);
+
+      // The read lands for next time, and the open page waited on it rather than asking again.
+      slow.complete();
+      api.holdConfig = null;
+      await tester.pumpAndSettle();
+      expect(api.configReads, before + 1);
+      sockets.single.trigger('session', {
+        'id': 'cs1',
+        'status': 'answers',
+        'ticket_id': null,
+        'messages': <Object?>[],
+      });
+      await tester.pumpAndSettle();
+      await finish(tester);
+    },
+  );
 
   testWidgets('openTicket opens that ticket', (tester) async {
     final (:context, api: _, sockets: _, events: _) = await host(
