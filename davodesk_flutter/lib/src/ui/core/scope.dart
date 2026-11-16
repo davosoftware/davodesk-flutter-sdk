@@ -52,8 +52,10 @@ final class const ArticlePlace(final String id) extends SupportPlace {
   this;
 }
 
-/// One of the customer's tickets.
-final class const TicketPlace(final String id) extends SupportPlace {
+/// One of the customer's tickets, with a [notice] at its top when the contact form sent
+/// the customer there: where their message went.
+final class const TicketPlace(final String id, {final String? notice})
+    extends SupportPlace {
   /// Creates the place.
   this;
 }

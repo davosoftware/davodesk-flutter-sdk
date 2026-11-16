@@ -63,9 +63,7 @@ void main() {
       DavoDeskPage.home: 'How can we help?',
       DavoDeskPage.chats: 'No chats yet',
       DavoDeskPage.help: 'Search help articles',
-      DavoDeskPage.contact:
-          'Have a question about your order or our services? '
-          'Our team is here to help.',
+      DavoDeskPage.contact: 'Have a question? Our team is here to help.',
     };
     for (final MapEntry(key: page, value: words) in pages.entries) {
       DavoDesk.show(context, page: page);
@@ -203,6 +201,44 @@ void main() {
         'messages': <Object?>[],
       });
       await tester.pumpAndSettle();
+      await finish(tester);
+    },
+  );
+
+  // App feedback spec §4.
+  testWidgets(
+    'after sending, the request opens saying where the message went',
+    (tester) async {
+      const id = 'a00000000000008dee9d';
+      final (:context, :api, sockets: _, events: _) = await host(
+        tester,
+        api: FakeApi()
+          ..raisedTicketId = id
+          ..ticketsById = {id: ticketJson(id, subject: 'Card declined')},
+      );
+      Future<void> send() async {
+        DavoDesk.show(context, page: DavoDeskPage.contact);
+        await tester.pumpAndSettle();
+        await tester.enterText(
+          find.byKey(const Key('subject')),
+          'Card declined',
+        );
+        await tester.enterText(find.byKey(const Key('message')), 'My card…');
+        await tester.pump();
+        await tester.tap(find.text('Send'));
+        await tester.pumpAndSettle();
+      }
+
+      await send();
+      // On the request itself, which the form gave way to.
+      expect(find.text('Card declined'), findsOneWidget);
+      expect(find.text('Sent. We’ll reply here.'), findsOneWidget);
+      Navigator.of(context).popUntil((route) => route.isFirst);
+      await tester.pumpAndSettle();
+
+      api.raiseResumes = true;
+      await send();
+      expect(find.text('Added to your open request #8DEE9D'), findsOneWidget);
       await finish(tester);
     },
   );

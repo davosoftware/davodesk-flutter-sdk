@@ -2,10 +2,11 @@ import 'dart:math' as math;
 
 import 'package:material_ui/material_ui.dart';
 
-import '../../../domain/models.dart' show RequestSubject;
+import '../../../domain/models.dart' show RaisedTicket, RequestSubject;
 import '../../core/scope.dart';
 import '../../theme.dart';
 import '../../widgets/page_bar.dart';
+import '../../widgets/status_banner.dart';
 import '../../words.dart';
 import 'contact_view_model.dart';
 
@@ -62,9 +63,18 @@ class _ContactPageState extends State<ContactPage> {
         field.clear();
       }
       scope.onRaised?.call(raised);
-      scope.go(context, TicketPlace(raised.ticket.id));
+      scope.go(
+        context,
+        TicketPlace(
+          raised.ticket.id,
+          notice: raised.resumed ? _addedTo(raised) : 'Sent. We’ll reply here.',
+        ),
+      );
     }
   }
+
+  static String _addedTo(RaisedTicket raised) =>
+      'Added to your open request ${referenceOf(raised.ticket.id)}';
 
   @override
   Widget build(BuildContext context) {
@@ -99,8 +109,10 @@ class _ContactPageState extends State<ContactPage> {
                         padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
                         children: [
                           Text(
-                            'Have a question about your order or our services? '
-                            'Our team is here to help.',
+                            switch (form?.intro?.trim()) {
+                              final String intro when intro.isNotEmpty => intro,
+                              _ => 'Have a question? Our team is here to help.',
+                            },
                             style: TextStyle(
                               color: colors.ink2,
                               fontSize: 13.5,
@@ -112,21 +124,17 @@ class _ContactPageState extends State<ContactPage> {
                           ],
                           if (model.raised case final raised?) ...[
                             const SizedBox(height: 14),
-                            _Banner(
-                              text: raised.resumed
-                                  ? 'Added to your open request '
-                                        '${referenceOf(raised.ticket.id)}'
+                            StatusBanner(
+                              raised.resumed
+                                  ? _addedTo(raised)
                                   : 'Sent. We’ll reply in Chats.',
-                              color: colors.ok,
-                              background: colors.okSoft,
                             ),
                           ],
                           if (model.failed) ...[
                             const SizedBox(height: 14),
-                            _Banner(
-                              text: 'Something went wrong here.',
-                              color: colors.warn,
-                              background: colors.warnSoft,
+                            const StatusBanner(
+                              'Something went wrong here.',
+                              wrong: true,
                             ),
                           ],
                           const SizedBox(height: 16),
@@ -358,36 +366,4 @@ class _Note extends StatelessWidget {
       ),
     );
   }
-}
-
-class _Banner extends StatelessWidget {
-  const _Banner({
-    required this.text,
-    required this.color,
-    required this.background,
-  });
-
-  final String text;
-  final Color color;
-  final Color background;
-
-  @override
-  Widget build(BuildContext context) => Semantics(
-    liveRegion: true,
-    child: Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: background,
-        borderRadius: SupportColors.of(context).corner(10),
-      ),
-      child: Text(
-        text,
-        style: TextStyle(
-          color: color,
-          fontSize: 13,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-    ),
-  );
 }
