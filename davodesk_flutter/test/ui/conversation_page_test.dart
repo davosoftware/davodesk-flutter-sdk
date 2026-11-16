@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:davodesk_flutter/davodesk_flutter.dart';
 import 'package:davodesk_flutter/src/ui/core/scope.dart';
 import 'package:davodesk_flutter/src/ui/features/conversation/conversation_page.dart';
+import 'package:davodesk_flutter/src/ui/widgets/slide_in.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:shared_preferences_platform_interface/in_memory_shared_preferences_async.dart';
@@ -122,7 +125,7 @@ void main() {
           ],
         ),
       );
-      final inChat = find.byType(ListView);
+      final inChat = find.byType(RefreshIndicator);
       expect(
         find.descendant(of: inChat, matching: find.text('Callie')),
         findsNWidgets(2),
@@ -393,12 +396,177 @@ void main() {
     },
   );
 
+  // App feedback spec §8. Short lines first and long ones after, as a real chat runs: a
+  // list that guesses its length from the lines it has built falls short of the end.
+  Map<String, Object?> longChat() => snapshot(
+    messages: [
+      for (var i = 0; i < 25; i++) bot('m$i', 'Line $i.'),
+      for (var i = 25; i < 32; i++) bot('m$i', 'A long answer $i. ' * 24),
+    ],
+  );
+  const longAnswer = {
+    'id': 'mx',
+    'sender_type': 'bot',
+    'content':
+        'Another long answer. Another long answer. Another long answer. '
+        'Another long answer. Another long answer. Another long answer. '
+        'Another long answer. Another long answer. The newest line',
+  };
+
+  /// Whether [line]'s end, its newest words, is on screen in the chat.
+  void expectInView(WidgetTester tester, Finder line) {
+    expect(line, findsOneWidget);
+    final chat = tester.getRect(find.byType(RefreshIndicator));
+    expect(tester.getRect(line).bottom, lessThanOrEqualTo(chat.bottom));
+    expect(tester.getRect(line).bottom, greaterThan(chat.top));
+  }
+
+  testWidgets('in a long chat, a new line is in view', (tester) async {
+    final (page, socket) = await open(tester, first: longChat());
+    socket.trigger('message', longAnswer);
+    await tester.pumpAndSettle();
+    expectInView(tester, find.textContaining('The newest line'));
+    await page.finish(tester);
+  });
+
+  testWidgets(
+    'in a long chat, the typing dots and the answer after them are in view',
+    (tester) async {
+      final (page, socket) = await open(tester, first: longChat());
+      socket.trigger('typing', {'by': 'ai', 'typing': true});
+      await tester.pump();
+      await tester.pump();
+      expectInView(tester, find.bySemanticsLabel(RegExp('Callie is typing')));
+
+      // The answer takes the dots' place: as many lines as before, the last one new.
+      socket.trigger('message', longAnswer);
+      await tester.pumpAndSettle();
+      expectInView(tester, find.textContaining('The newest line'));
+      await page.finish(tester);
+    },
+  );
+
+  testWidgets(
+    'in a long chat, a message refused after "Sending…" shows its Retry in view',
+    (tester) async {
+      final (page, socket) = await open(tester, first: longChat());
+      final refusal = Completer<Object?>();
+      socket.answers['message'] = refusal.future;
+      await tester.enterText(find.byType(TextField), 'Hello?');
+      await tester.pump();
+      await tester.tap(find.bySemanticsLabel('Send'));
+      await tester.pumpAndSettle();
+      expect(find.text('Sending…'), findsOneWidget);
+
+      refusal.complete({'ok': false});
+      await tester.pumpAndSettle();
+      // The whole button, not just its word: "Not sent · Retry" is taller.
+      expectInView(tester, find.widgetWithText(TextButton, 'Retry'));
+      await page.finish(tester);
+    },
+  );
+
+  testWidgets('when the keyboard opens, the newest line stays in view', (
+    tester,
+  ) async {
+    final (page, socket) = await open(tester, first: longChat());
+    socket.trigger('message', longAnswer);
+    await tester.pumpAndSettle();
+    // 300 logical pixels of keyboard, at the harness's 3 pixels each.
+    tester.view.viewInsets = const FakeViewPadding(bottom: 900);
+    await tester.pumpAndSettle();
+    expectInView(tester, find.textContaining('The newest line'));
+    await page.finish(tester);
+  });
+
+  Finder slidingIn(Finder line) =>
+      find.ancestor(of: line, matching: find.byType(SlideIn));
+  Finder dots() => find.bySemanticsLabel(RegExp('Callie is typing'));
+
+  testWidgets(
+    "the customer's message slides in as Sending…, not again as sent",
+    (tester) async {
+      final (page, socket) = await open(tester);
+      final echo = Completer<Object?>();
+      socket.answers['message'] = echo.future;
+      await tester.enterText(find.byType(TextField), 'Hello?');
+      await tester.pump();
+      await tester.tap(find.bySemanticsLabel('Send'));
+      await tester.pump();
+      expect(slidingIn(find.text('Hello?')), findsOneWidget);
+      await tester.pumpAndSettle();
+
+      socket.trigger('message', me('m2', 'Hello?'));
+      echo.complete({'ok': true});
+      // A line that slid in keeps its SlideIn, so settling hides nothing.
+      await tester.pumpAndSettle();
+      expect(find.text('Sending…'), findsNothing);
+      expect(slidingIn(find.text('Hello?')), findsNothing);
+      await page.finish(tester);
+    },
+  );
+
+  testWidgets(
+    'dots there when the chat opens stay still, and slide in when they come back',
+    (tester) async {
+      final page = await pumpPage(tester, ConversationPage.new, api: chatApi());
+      final socket = page.sockets.single
+        ..trigger('session', snapshot(messages: [bot('m1', 'Hello')]))
+        ..trigger('typing', {'by': 'ai', 'typing': true});
+      await tester.pump();
+      await tester.pump();
+      expect(dots(), findsOneWidget);
+      expect(slidingIn(dots()), findsNothing);
+
+      socket.trigger('message', bot('m2', 'Here is how.'));
+      await tester.pump();
+      socket.trigger('typing', {'by': 'ai', 'typing': true});
+      await tester.pump();
+      await tester.pump();
+      expect(slidingIn(dots()), findsOneWidget);
+      await page.finish(tester);
+    },
+  );
+
+  testWidgets('a new bubble slides in, unless the phone asks for less motion', (
+    tester,
+  ) async {
+    final (page, socket) = await open(tester);
+    socket.trigger('message', {
+      'id': 'm2',
+      'sender_type': 'bot',
+      'content': 'Here is how.',
+    });
+    await tester.pump();
+    await tester.pump();
+    expect(slidingIn(find.text('Here is how.')), findsOneWidget);
+    // What the chat showed when it opened stays still.
+    expect(slidingIn(find.text('Hello')), findsNothing);
+    await tester.pumpAndSettle();
+
+    tester.platformDispatcher.accessibilityFeaturesTestValue =
+        const FakeAccessibilityFeatures(disableAnimations: true);
+    addTearDown(tester.platformDispatcher.clearAccessibilityFeaturesTestValue);
+    socket.trigger('message', {
+      'id': 'm3',
+      'sender_type': 'bot',
+      'content': 'And one more.',
+    });
+    await tester.pumpAndSettle();
+    expect(slidingIn(find.text('And one more.')), findsNothing);
+    await page.finish(tester);
+  });
+
   // App feedback spec §3.
   testWidgets('pulling the chat down asks for a fresh snapshot', (
     tester,
   ) async {
     final (page, socket) = await open(tester);
-    await tester.fling(find.byType(ListView), const Offset(0, 400), 1000);
+    await tester.fling(
+      find.byType(RefreshIndicator),
+      const Offset(0, 400),
+      1000,
+    );
     await tester.pumpAndSettle();
     expect(socket.sent, [
       ['session:sync', <String, Object?>{}],

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show listEquals;
 import 'package:material_ui/material_ui.dart';
 
 import '../../core/scope.dart';
@@ -5,8 +6,9 @@ import '../../theme.dart';
 import '../../widgets/brand_tile.dart';
 import '../../widgets/composer.dart';
 import '../../widgets/message_bubble.dart';
-import '../../widgets/typing_bubble.dart';
 import '../../widgets/recover.dart';
+import '../../widgets/slide_in.dart';
+import '../../widgets/typing_bubble.dart';
 import 'conversation_view_model.dart';
 
 /// The live conversation with DavoDesk AI, then the team.
@@ -129,7 +131,34 @@ class ConversationView extends StatefulWidget {
 
 class _ConversationViewState extends State<ConversationView> {
   final _scroll = ScrollController();
-  int _lines = 0;
+  List<Object?> _drawn = const [];
+
+  /// The items the chat showed when it first had any: they stay still (spec §8).
+  Set<String>? _firstShown;
+
+  @override
+  void initState() {
+    super.initState();
+    _noteFirstShown();
+  }
+
+  @override
+  void didUpdateWidget(ConversationView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _noteFirstShown();
+  }
+
+  void _noteFirstShown() {
+    final items = widget.state.items;
+    if (_firstShown == null) {
+      if (items.isNotEmpty) {
+        _firstShown = {for (final item in items) _keyOf(item)};
+      }
+    } else if (!items.any((item) => item is TypingItem)) {
+      // The dots slide in each time they come back.
+      _firstShown!.remove(_typing);
+    }
+  }
 
   @override
   void dispose() {
@@ -137,14 +166,34 @@ class _ConversationViewState extends State<ConversationView> {
     super.dispose();
   }
 
-  /// Keeps the newest line in view as lines arrive.
-  void _follow(int lines) {
-    if (lines == _lines) return;
-    _lines = lines;
+  /// Keeps the chat at its newest line: after a frame whose lines, or room, changed.
+  void _follow(List<Object?> drawn) {
+    if (listEquals(drawn, _drawn)) return;
+    _drawn = drawn;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scroll.hasClients) _scroll.jumpTo(_scroll.position.maxScrollExtent);
     });
   }
+
+  static const _typing = 'typing';
+
+  static String _keyOf(ChatItem item) => switch (item) {
+    BubbleItem(:final id) => id,
+    JoinedItem() => 'joined',
+    TypingItem() => _typing,
+  };
+
+  /// Whether [item] fades in and rises: a bubble, or the dots, that came after the chat
+  /// first showed; not the customer's own message back from the server, whose "Sending…"
+  /// bubble already did.
+  bool _slides(ChatItem item) =>
+      _firstShown != null &&
+      !_firstShown!.contains(_keyOf(item)) &&
+      switch (item) {
+        BubbleItem(mine: true, status: BubbleStatus.sent) ||
+        JoinedItem() => false,
+        BubbleItem() || TypingItem() => true,
+      };
 
   @override
   Widget build(BuildContext context) {
@@ -165,24 +214,36 @@ class _ConversationViewState extends State<ConversationView> {
                       : LayoutBuilder(
                           builder: (context, box) {
                             final lines = _linesOf(state, box.maxWidth);
-                            _follow(lines.length);
+                            _follow([
+                              box.maxHeight,
+                              for (final line in lines) line.key,
+                              // "Not sent · Retry" makes a bubble taller.
+                              for (final item in state.items)
+                                if (item is BubbleItem) item.status,
+                            ]);
                             return RefreshIndicator(
                               onRefresh: widget.onRefresh,
                               color: colors.accent,
-                              child: ListView.builder(
-                                controller: _scroll,
-                                // A short chat still pulls down to refresh.
-                                physics: const AlwaysScrollableScrollPhysics(),
-                                padding: const EdgeInsets.fromLTRB(
-                                  14,
-                                  4,
-                                  14,
-                                  8,
-                                ),
-                                itemCount: lines.length,
-                                itemBuilder: (context, i) => Padding(
-                                  padding: const EdgeInsets.only(bottom: 10),
-                                  child: lines[i],
+                              // Every line laid out (chats are short), so the end is
+                              // known and a jump to it lands. Expanded, so the whole
+                              // pane scrolls and pulls, under a short chat too.
+                              child: SizedBox.expand(
+                                child: SingleChildScrollView(
+                                  controller: _scroll,
+                                  // A short chat still pulls down to refresh.
+                                  physics:
+                                      const AlwaysScrollableScrollPhysics(),
+                                  padding: const EdgeInsets.fromLTRB(
+                                    14,
+                                    4,
+                                    14,
+                                    8,
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.stretch,
+                                    children: lines,
+                                  ),
                                 ),
                               ),
                             );
@@ -222,42 +283,60 @@ class _ConversationViewState extends State<ConversationView> {
     );
   }
 
+  /// The chat's lines, each keyed, so a new one is a new line rather than an old one
+  /// changed.
   List<Widget> _linesOf(ConversationState state, double width) {
     final colors = SupportColors.of(context);
+    final still = MediaQuery.disableAnimationsOf(context);
     final small = TextStyle(color: colors.ink3, fontSize: 11.5);
-    Widget centered(String text, {TextStyle? style}) => Center(
-      child: Text(text, textAlign: TextAlign.center, style: style ?? small),
+    Widget line(String key, Widget child, {bool slides = false}) => Padding(
+      key: ValueKey('line:$key'),
+      padding: const EdgeInsets.only(bottom: 10),
+      child: slides && !still ? SlideIn(child: child) : child,
+    );
+    Widget centered(String key, String text, {TextStyle? style}) => line(
+      key,
+      Center(
+        child: Text(text, textAlign: TextAlign.center, style: style ?? small),
+      ),
     );
     return [
       if (state.tagline case final tagline?)
-        centered(tagline, style: TextStyle(color: colors.ink2, fontSize: 11.5)),
+        centered(
+          'tagline',
+          tagline,
+          style: TextStyle(color: colors.ink2, fontSize: 11.5),
+        ),
       if (state.notice case final notice?)
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          decoration: BoxDecoration(
-            border: Border.all(color: colors.rule),
-            borderRadius: colors.corner(12),
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            spacing: 8,
-            children: [
-              Icon(Icons.info_outline_rounded, size: 16, color: colors.ink3),
-              Expanded(
-                child: Text(
-                  notice,
-                  style: TextStyle(
-                    color: colors.ink2,
-                    fontSize: 11.5,
-                    height: 1.45,
+        line(
+          'notice',
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              border: Border.all(color: colors.rule),
+              borderRadius: colors.corner(12),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              spacing: 8,
+              children: [
+                Icon(Icons.info_outline_rounded, size: 16, color: colors.ink3),
+                Expanded(
+                  child: Text(
+                    notice,
+                    style: TextStyle(
+                      color: colors.ink2,
+                      fontSize: 11.5,
+                      height: 1.45,
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       for (final item in state.items)
-        switch (item) {
+        line(_keyOf(item), switch (item) {
           BubbleItem() => MessageBubble(
             key: ValueKey(item.id),
             item: item,
@@ -265,58 +344,76 @@ class _ConversationViewState extends State<ConversationView> {
             onOpenFile: widget.onOpenFile,
             onResend: widget.onResend,
           ),
-          JoinedItem(:final name) => centered('$name joined'),
+          JoinedItem(:final name) => Center(
+            child: Text(
+              '$name joined',
+              textAlign: TextAlign.center,
+              style: small,
+            ),
+          ),
           TypingItem() => TypingBubble(
             key: const ValueKey('typing'),
             item: item,
           ),
-        },
+        }, slides: _slides(item)),
       if (state.confirming)
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            OutlinedButton(
-              onPressed: widget.onSolved,
-              child: const Text('That solved it'),
-            ),
-            OutlinedButton(
+        line(
+          'confirming',
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              OutlinedButton(
+                onPressed: widget.onSolved,
+                child: const Text('That solved it'),
+              ),
+              OutlinedButton(
+                onPressed: widget.onTalkToPerson,
+                child: const Text('Talk to a person'),
+              ),
+            ],
+          ),
+        ),
+      if (state.choices.isNotEmpty)
+        line(
+          'choices',
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            spacing: 7,
+            children: [
+              for (final choice in state.choices)
+                OutlinedButton(
+                  onPressed: () => widget.onChoose(choice.key),
+                  style: OutlinedButton.styleFrom(
+                    shape: colors.corners == DavoDeskCorners.square
+                        ? const RoundedRectangleBorder()
+                        : const StadiumBorder(),
+                    side: BorderSide(
+                      color: colors.accent.withValues(alpha: 0.3),
+                    ),
+                    foregroundColor: colors.accentInk,
+                    backgroundColor: colors.paper,
+                  ),
+                  child: Text(choice.label, textAlign: TextAlign.end),
+                ),
+            ],
+          ),
+        ),
+      if (state.offerTeam)
+        line(
+          'offer-team',
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: TextButton(
               onPressed: widget.onTalkToPerson,
               child: const Text('Talk to a person'),
             ),
-          ],
-        ),
-      if (state.choices.isNotEmpty)
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          spacing: 7,
-          children: [
-            for (final choice in state.choices)
-              OutlinedButton(
-                onPressed: () => widget.onChoose(choice.key),
-                style: OutlinedButton.styleFrom(
-                  shape: colors.corners == DavoDeskCorners.square
-                      ? const RoundedRectangleBorder()
-                      : const StadiumBorder(),
-                  side: BorderSide(color: colors.accent.withValues(alpha: 0.3)),
-                  foregroundColor: colors.accentInk,
-                  backgroundColor: colors.paper,
-                ),
-                child: Text(choice.label, textAlign: TextAlign.end),
-              ),
-          ],
-        ),
-      if (state.offerTeam)
-        Align(
-          alignment: AlignmentDirectional.centerStart,
-          child: TextButton(
-            onPressed: widget.onTalkToPerson,
-            child: const Text('Talk to a person'),
           ),
         ),
-      if (state.reconnecting) centered('Reconnecting…'),
-      if (state.limited) centered('Too many messages. Try again in a minute.'),
-      if (state.endedLine case final line?) centered(line),
+      if (state.reconnecting) centered('reconnecting', 'Reconnecting…'),
+      if (state.limited)
+        centered('limited', 'Too many messages. Try again in a minute.'),
+      if (state.endedLine case final ended?) centered('ended', ended),
     ];
   }
 }
