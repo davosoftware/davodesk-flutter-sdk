@@ -287,6 +287,45 @@ void main() {
     },
   );
 
+  // App feedback spec §3.
+  test('asks for a fresh snapshot when the chat opens again and when the app comes back', () async {
+    final (:client, api: _, :sockets, identities: _) = arrange();
+    await client.start();
+    sockets.single.trigger('session', {
+      'id': 'cs1',
+      'status': 'bot',
+      'ticket_id': null,
+      'messages': <Object?>[],
+    });
+    await pumpEventQueue();
+    int syncs() =>
+        sockets.single.sent.where((sent) => sent[0] == 'session:sync').length;
+
+    // Home starting the chat asks for nothing more.
+    await client.start();
+    await pumpEventQueue();
+    expect(syncs(), 0);
+
+    await client.start(refresh: true);
+    await pumpEventQueue();
+    expect(syncs(), 1);
+
+    final binding = TestWidgetsFlutterBinding.instance;
+    for (final state in [
+      AppLifecycleState.inactive,
+      AppLifecycleState.hidden,
+      AppLifecycleState.paused,
+      AppLifecycleState.hidden,
+      AppLifecycleState.inactive,
+      AppLifecycleState.resumed,
+    ]) {
+      binding.handleAppLifecycleStateChanged(state);
+    }
+    await pumpEventQueue();
+    expect(syncs(), 2);
+    client.dispose();
+  });
+
   test(
     'logout ends the session, forgets the markers, and asks again next time',
     () async {

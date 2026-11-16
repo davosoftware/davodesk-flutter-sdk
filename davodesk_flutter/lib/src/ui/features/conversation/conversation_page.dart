@@ -60,6 +60,7 @@ class _ConversationPageState extends State<ConversationPage> {
         onAttach: model.attach,
         onOpenFile: (url) => scope.openLink(Uri.parse(url)),
         onResend: model.resend,
+        onRefresh: model.refresh,
         onRetry: model.load,
         onBack: () => Navigator.maybePop(context),
       ),
@@ -82,6 +83,7 @@ class ConversationView extends StatefulWidget {
     required this.onOpenFile,
     required this.onRetry,
     required this.onResend,
+    required this.onRefresh,
     required this.onBack,
   });
 
@@ -114,6 +116,9 @@ class ConversationView extends StatefulWidget {
 
   /// Sends a message the server refused again, by its client id.
   final void Function(String clientId) onResend;
+
+  /// Asks for the conversation again, when the customer pulls it down.
+  final Future<void> Function() onRefresh;
 
   /// Goes back.
   final VoidCallback onBack;
@@ -161,13 +166,24 @@ class _ConversationViewState extends State<ConversationView> {
                           builder: (context, box) {
                             final lines = _linesOf(state, box.maxWidth);
                             _follow(lines.length);
-                            return ListView.builder(
-                              controller: _scroll,
-                              padding: const EdgeInsets.fromLTRB(14, 4, 14, 8),
-                              itemCount: lines.length,
-                              itemBuilder: (context, i) => Padding(
-                                padding: const EdgeInsets.only(bottom: 10),
-                                child: lines[i],
+                            return RefreshIndicator(
+                              onRefresh: widget.onRefresh,
+                              color: colors.accent,
+                              child: ListView.builder(
+                                controller: _scroll,
+                                // A short chat still pulls down to refresh.
+                                physics: const AlwaysScrollableScrollPhysics(),
+                                padding: const EdgeInsets.fromLTRB(
+                                  14,
+                                  4,
+                                  14,
+                                  8,
+                                ),
+                                itemCount: lines.length,
+                                itemBuilder: (context, i) => Padding(
+                                  padding: const EdgeInsets.only(bottom: 10),
+                                  child: lines[i],
+                                ),
                               ),
                             );
                           },

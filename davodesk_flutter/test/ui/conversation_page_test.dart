@@ -393,6 +393,19 @@ void main() {
     },
   );
 
+  // App feedback spec §3.
+  testWidgets('pulling the chat down asks for a fresh snapshot', (
+    tester,
+  ) async {
+    final (page, socket) = await open(tester);
+    await tester.fling(find.byType(ListView), const Offset(0, 400), 1000);
+    await tester.pumpAndSettle();
+    expect(socket.sent, [
+      ['session:sync', <String, Object?>{}],
+    ]);
+    await page.finish(tester);
+  });
+
   testWidgets('a refused send offers Retry, which sends it again', (
     tester,
   ) async {

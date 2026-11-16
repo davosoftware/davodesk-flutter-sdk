@@ -157,7 +157,10 @@ class DavoDeskClient {
 
   /// Opens the customer's session and the live chat, and reads their tickets. A brand
   /// that only answers from its articles has no chat and no tickets.
-  Future<void> start() async {
+  ///
+  /// With [refresh], a chat already open asks for its conversation again, so nothing
+  /// that happened meanwhile is missed (app feedback spec §3).
+  Future<void> start({bool refresh = false}) async {
     final config = await this.config();
     if (config.answersOnly) {
       await _ready();
@@ -166,8 +169,17 @@ class DavoDeskClient {
     if (!_connected) {
       _connected = true;
       unawaited(_chat.connect());
+    } else if (refresh) {
+      unawaited(sync());
     }
     await refreshTickets();
+  }
+
+  /// Asks for the conversation again: a fresh snapshot replaces it (app feedback
+  /// spec §3). Nothing when the chat has not started.
+  Future<void> sync() async {
+    if (!_connected) return;
+    await _chat.sync();
   }
 
   /// Opens a fresh session and reads the tickets again: the app came back to the
@@ -180,6 +192,7 @@ class DavoDeskClient {
     } on Object catch (error) {
       _log.fine('The tickets could not be read on resume: $error');
     }
+    await sync();
   }
 
   /// Reads the customer's tickets again, and the unread count with them.

@@ -232,7 +232,8 @@ class ConversationViewModel extends ChangeNotifier {
         _fresh = false;
         await _client.startNew();
       }
-      await _client.start();
+      // Opened again, the chat asks for what it may have missed (app feedback spec §3).
+      await _client.start(refresh: true);
     } on Object catch (error) {
       _log.fine('The conversation could not open: $error');
       _failed = true;
@@ -245,6 +246,9 @@ class ConversationViewModel extends ChangeNotifier {
 
   /// Sends a message the server refused again.
   Future<void> resend(String clientId) => _client.resend(clientId);
+
+  /// Asks for the conversation again, on pull-to-refresh.
+  Future<void> refresh() => _client.sync();
 
   /// Answers a choice.
   Future<void> choose(String key) => _client.choose(key);
