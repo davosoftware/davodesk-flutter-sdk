@@ -61,7 +61,19 @@ class DavoDeskClient {
       socketFactory: socketFactory,
     );
     _chatEvents = _chat.events.listen((event) {
+      final wasLive = _conversation.value.connection == .live;
       _conversation.value = reduce(_conversation.value, event);
+      // A message waits as "Sending…" while the chat is down, and counts again once it
+      // is back; a refresh while live changes nothing.
+      if (event case ConnectionEvent(state: final connection)) {
+        if (connection != .live) {
+          _stopGivingUp();
+        } else if (!wasLive) {
+          for (final each in _conversation.value.pending) {
+            if (!each.failed) _giveUpLater(each.clientId);
+          }
+        }
+      }
       // Typing not said again goes after a while (app feedback spec §2).
       if (event case TypingEvent(:final by, typing: true)) {
         _typingTimeout?.cancel();
@@ -106,6 +118,33 @@ class DavoDeskClient {
   /// How long typing lasts when it is not said again.
   static const typingLasts = Duration(seconds: 8);
   Timer? _typingTimeout;
+
+  /// How long a message waits on a live chat for the server before it shows as not sent:
+  /// one written to a connection that had already died is never answered (app feedback
+  /// spec §1). Its echo comes first when the server has it.
+  static const sendGivesUpAfter = Duration(seconds: 20);
+  final _givingUp = <String, Timer>{};
+
+  void _giveUpLater(String clientId) {
+    _givingUp.remove(clientId)?.cancel();
+    if (_conversation.value.connection != .live) return;
+    _givingUp[clientId] = Timer(sendGivesUpAfter, () {
+      _givingUp.remove(clientId);
+      final waiting = _conversation.value.pending.any(
+        (each) => each.clientId == clientId && !each.failed,
+      );
+      if (waiting) {
+        _conversation.value = reduce(_conversation.value, SendFailed(clientId));
+      }
+    });
+  }
+
+  void _stopGivingUp() {
+    for (final timer in _givingUp.values) {
+      timer.cancel();
+    }
+    _givingUp.clear();
+  }
 
   Future<ChannelConfig>? _config;
   ChannelConfig? _lastConfig;
@@ -223,6 +262,7 @@ class DavoDeskClient {
       _conversation.value,
       SendStarted(clientId, text),
     );
+    _giveUpLater(clientId);
     ChatAck ack;
     try {
       ack = await _chat.send(text, clientId: clientId);
@@ -230,6 +270,8 @@ class DavoDeskClient {
       _log.fine('The message did not go: $error');
       ack = const ChatAck(ok: false);
     }
+    // The server answered: nothing is left to give up on.
+    _givingUp.remove(clientId)?.cancel();
     if (!ack.ok) {
       _conversation.value = reduce(_conversation.value, SendFailed(clientId));
     }
@@ -378,6 +420,7 @@ class DavoDeskClient {
   void dispose() {
     _lifecycle.dispose();
     _typingTimeout?.cancel();
+    _stopGivingUp();
     unawaited(_chatEvents.cancel());
     _chat.dispose();
     _session.dispose();

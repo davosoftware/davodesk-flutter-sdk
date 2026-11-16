@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:davodesk_flutter/davodesk_flutter.dart';
@@ -249,6 +250,67 @@ void main() {
       expect(api.raised.first.key, api.raised.last.key);
       client.dispose();
     });
+  });
+
+  // App feedback spec §1: a send that gives up shows as not sent. One written to a
+  // connection that had already died is never answered.
+  group('a message the server never answers', () {
+    const snapshot = {
+      'id': 'cs1',
+      'status': 'bot',
+      'ticket_id': null,
+      'messages': <Object?>[],
+    };
+    bool failed(DavoDeskClient client) =>
+        client.conversation.value.pending.single.failed;
+
+    test('shows as not sent after 20 seconds live', () {
+      fakeAsync((async) {
+        final (:client, api: _, :sockets, identities: _) = arrange();
+        unawaited(client.start());
+        async.flushMicrotasks();
+        sockets.single
+          ..trigger('session', snapshot)
+          ..answers['message'] = Completer<Object?>().future;
+        unawaited(client.send('Hello?'));
+        async.flushMicrotasks();
+        async.elapse(const Duration(seconds: 19));
+        expect(failed(client), isFalse);
+        async.elapse(const Duration(seconds: 1));
+        expect(failed(client), isTrue);
+        client.dispose();
+      });
+    });
+
+    test(
+      'waits as Sending… while the chat reconnects, and counts again once live',
+      () {
+        fakeAsync((async) {
+          final (:client, api: _, :sockets, identities: _) = arrange();
+          unawaited(client.start());
+          async.flushMicrotasks();
+          final socket = sockets.single
+            ..trigger('session', snapshot)
+            ..answers['message'] = Completer<Object?>().future;
+          unawaited(client.send('Hello?'));
+          async.flushMicrotasks();
+          async.elapse(const Duration(seconds: 10));
+          socket.trigger('disconnect', 'transport close');
+          async.elapse(const Duration(minutes: 1));
+          expect(failed(client), isFalse);
+
+          // Back, and the server's snapshot has not got it.
+          socket.trigger('session', snapshot);
+          async.elapse(const Duration(seconds: 19));
+          expect(failed(client), isFalse);
+          // A refresh while live does not start the count again.
+          socket.trigger('session', snapshot);
+          async.elapse(const Duration(seconds: 1));
+          expect(failed(client), isTrue);
+          client.dispose();
+        });
+      },
+    );
   });
 
   test('a 401 opens a fresh session and tries once more', () async {
