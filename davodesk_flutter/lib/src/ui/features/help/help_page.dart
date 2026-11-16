@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../domain/models.dart';
 import '../../core/scope.dart';
+import '../../core/support_shell.dart';
 import '../../theme.dart';
 import '../../widgets/page_bar.dart';
 import '../../widgets/recover.dart';
@@ -52,6 +53,7 @@ class _HelpPageState extends State<HelpPage> {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(14, 12, 14, 4),
                   child: TextField(
+                    contextMenuBuilder: supportContextMenu(context),
                     textInputAction: TextInputAction.search,
                     onSubmitted: model.search,
                     onChanged: (text) {

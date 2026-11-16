@@ -1,5 +1,6 @@
 import 'package:davodesk_flutter/src/ui/core/scope.dart';
 import 'package:davodesk_flutter/src/ui/features/messages/messages_page.dart';
+import 'package:davodesk_flutter/src/ui/widgets/brand_tile.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:shared_preferences_platform_interface/in_memory_shared_preferences_async.dart';
@@ -54,6 +55,38 @@ void main() {
       await page.finish(tester);
     },
   );
+
+  // App feedback spec §6.
+  testWidgets("a row shows the brand's tile, not the customer's own initial", (
+    tester,
+  ) async {
+    final api = withTickets();
+    api.tickets = [
+      ...api.tickets,
+      ticketJson(
+        'b00000000000000d1a5e',
+        subject: 'Card limit',
+        updated: '2026-11-04T10:00:00.000Z',
+        lastMessage: {
+          'sender_type': 'staff',
+          'sender_display_name': 'Mara',
+          'preview': 'Raised it for you',
+        },
+      ),
+    ];
+    final page = await pumpPage(tester, MessagesPage.new, api: api);
+    final list = find.byType(ListView);
+    // The customer wrote last on one, DavoDesk AI on another: the brand on both.
+    expect(
+      find.descendant(of: list, matching: find.byType(BrandTile)),
+      findsNWidgets(2),
+    );
+    expect(find.text('Y'), findsNothing);
+    expect(find.text('C'), findsNothing);
+    // A person on the team on the third: their initial.
+    expect(find.text('M'), findsOneWidget);
+    await page.finish(tester);
+  });
 
   testWidgets('opening a ticket marks it seen, and leads to it', (
     tester,

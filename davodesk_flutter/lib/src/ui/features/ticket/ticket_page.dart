@@ -1,20 +1,25 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../../core/scope.dart';
+import '../../core/support_shell.dart';
 import '../../theme.dart';
 import '../../widgets/message_bubble.dart';
 import '../../widgets/page_bar.dart';
 import '../../widgets/recover.dart';
 import '../../widgets/state_chip.dart';
+import '../../widgets/status_banner.dart';
 import 'ticket_view_model.dart';
 
 /// One of the customer's tickets.
 class TicketPage extends StatefulWidget {
-  /// Creates the page for the ticket [id].
-  const TicketPage({super.key, required this.id});
+  /// Creates the page for the ticket [id], with a [notice] at its top.
+  const TicketPage({super.key, required this.id, this.notice});
 
   /// The ticket's id.
   final String id;
+
+  /// Where a message just sent went, when the contact form opened the page.
+  final String? notice;
 
   @override
   State<TicketPage> createState() => _TicketPageState();
@@ -46,6 +51,7 @@ class _TicketPageState extends State<TicketPage> {
       listenable: model,
       builder: (context, _) => TicketView(
         state: model.state,
+        notice: widget.notice,
         onRate: model.rate,
         onReopen: model.reopen,
         onContinue: () => scope.go(context, const ConversationPlace()),
@@ -65,6 +71,7 @@ class TicketView extends StatelessWidget {
   const TicketView({
     super.key,
     required this.state,
+    this.notice,
     required this.onRate,
     required this.onReopen,
     required this.onContinue,
@@ -76,6 +83,9 @@ class TicketView extends StatelessWidget {
 
   /// What to show.
   final TicketState state;
+
+  /// A line at the top, loaded or not: where a message just sent went.
+  final String? notice;
 
   /// Rates the help.
   final Future<void> Function(String rating, String? comment) onRate;
@@ -111,6 +121,14 @@ class TicketView extends StatelessWidget {
             child: Column(
               children: [
                 PageBar(title: state.subject, onBack: onBack),
+                if (notice case final notice?)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(14, 12, 14, 0),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: StatusBanner(notice),
+                    ),
+                  ),
                 Expanded(
                   child: switch (state) {
                     TicketState(failed: true) => Center(
@@ -264,6 +282,7 @@ class _RatingCardState extends State<_RatingCard> {
           ),
           TextField(
             controller: _comment,
+            contextMenuBuilder: supportContextMenu(context),
             minLines: 2,
             maxLines: 4,
             maxLength: 1000,

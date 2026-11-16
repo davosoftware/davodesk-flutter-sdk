@@ -61,7 +61,29 @@ class DavoDeskClient {
       socketFactory: socketFactory,
     );
     _chatEvents = _chat.events.listen((event) {
+      final wasLive = _conversation.value.connection == .live;
       _conversation.value = reduce(_conversation.value, event);
+      // A message waits as "Sending…" while the chat is down, and counts again once it
+      // is back; a refresh while live changes nothing.
+      if (event case ConnectionEvent(state: final connection)) {
+        if (connection != .live) {
+          _stopGivingUp();
+        } else if (!wasLive) {
+          for (final each in _conversation.value.pending) {
+            if (!each.failed) _giveUpLater(each.clientId);
+          }
+        }
+      }
+      // Typing not said again goes after a while (app feedback spec §2).
+      if (event case TypingEvent(:final by, typing: true)) {
+        _typingTimeout?.cancel();
+        _typingTimeout = Timer(typingLasts, () {
+          _conversation.value = reduce(
+            _conversation.value,
+            TypingEvent(by: by, typing: false),
+          );
+        });
+      }
       // An ended chat answers nothing more: the next message needs a new one. A closed
       // ticket waits for the customer's Start a new conversation.
       if (event case EndedEvent(reason: 'helped' || 'idle')) {
@@ -92,6 +114,37 @@ class DavoDeskClient {
   final _conversation = ValueNotifier(const Conversation());
   final _tickets = ValueNotifier<List<TicketSummary>>(const []);
   final _unread = ValueNotifier(0);
+
+  /// How long typing lasts when it is not said again.
+  static const typingLasts = Duration(seconds: 8);
+  Timer? _typingTimeout;
+
+  /// How long a message waits on a live chat for the server before it shows as not sent:
+  /// one written to a connection that had already died is never answered (app feedback
+  /// spec §1). Its echo comes first when the server has it.
+  static const sendGivesUpAfter = Duration(seconds: 20);
+  final _givingUp = <String, Timer>{};
+
+  void _giveUpLater(String clientId) {
+    _givingUp.remove(clientId)?.cancel();
+    if (_conversation.value.connection != .live) return;
+    _givingUp[clientId] = Timer(sendGivesUpAfter, () {
+      _givingUp.remove(clientId);
+      final waiting = _conversation.value.pending.any(
+        (each) => each.clientId == clientId && !each.failed,
+      );
+      if (waiting) {
+        _conversation.value = reduce(_conversation.value, SendFailed(clientId));
+      }
+    });
+  }
+
+  void _stopGivingUp() {
+    for (final timer in _givingUp.values) {
+      timer.cancel();
+    }
+    _givingUp.clear();
+  }
 
   Future<ChannelConfig>? _config;
   ChannelConfig? _lastConfig;
@@ -143,7 +196,10 @@ class DavoDeskClient {
 
   /// Opens the customer's session and the live chat, and reads their tickets. A brand
   /// that only answers from its articles has no chat and no tickets.
-  Future<void> start() async {
+  ///
+  /// With [refresh], a chat already open asks for its conversation again, so nothing
+  /// that happened meanwhile is missed (app feedback spec §3).
+  Future<void> start({bool refresh = false}) async {
     final config = await this.config();
     if (config.answersOnly) {
       await _ready();
@@ -152,8 +208,17 @@ class DavoDeskClient {
     if (!_connected) {
       _connected = true;
       unawaited(_chat.connect());
+    } else if (refresh) {
+      unawaited(sync());
     }
     await refreshTickets();
+  }
+
+  /// Asks for the conversation again: a fresh snapshot replaces it (app feedback
+  /// spec §3). Nothing when the chat has not started.
+  Future<void> sync() async {
+    if (!_connected) return;
+    await _chat.sync();
   }
 
   /// Opens a fresh session and reads the tickets again: the app came back to the
@@ -166,6 +231,7 @@ class DavoDeskClient {
     } on Object catch (error) {
       _log.fine('The tickets could not be read on resume: $error');
     }
+    await sync();
   }
 
   /// Reads the customer's tickets again, and the unread count with them.
@@ -188,7 +254,44 @@ class DavoDeskClient {
   bool isUnread(TicketSummary ticket) => seen.isUnread(ticket, _seen.markers);
 
   /// Sends the customer's message in the conversation.
-  Future<ChatAck> send(String text) => _chat.send(text);
+  Future<ChatAck> send(String text) async {
+    // It shows at once as on its way, then as sent when it comes back, or as not sent
+    // when the server refuses it first (app feedback spec §1).
+    final clientId = _newClientId();
+    _conversation.value = reduce(
+      _conversation.value,
+      SendStarted(clientId, text),
+    );
+    _giveUpLater(clientId);
+    ChatAck ack;
+    try {
+      ack = await _chat.send(text, clientId: clientId);
+    } on Object catch (error) {
+      _log.fine('The message did not go: $error');
+      ack = const ChatAck(ok: false);
+    }
+    // The server answered: nothing is left to give up on.
+    _givingUp.remove(clientId)?.cancel();
+    if (!ack.ok) {
+      _conversation.value = reduce(_conversation.value, SendFailed(clientId));
+    }
+    return ack;
+  }
+
+  /// Sends a message the server refused again, as a new one.
+  Future<void> resend(String clientId) async {
+    final refused = _conversation.value.pending
+        .where((each) => each.clientId == clientId && each.failed)
+        .firstOrNull;
+    if (refused == null) return;
+    _conversation.value = reduce(_conversation.value, SendDropped(clientId));
+    await send(refused.content);
+  }
+
+  String _newClientId() => [
+    for (var i = 0; i < 16; i++)
+      _random.nextInt(256).toRadixString(16).padLeft(2, '0'),
+  ].join();
 
   /// Answers a choice the last reply offered.
   Future<ChatAck> choose(String key) => _chat.choose(key);
@@ -316,6 +419,8 @@ class DavoDeskClient {
   /// Stops everything the client runs.
   void dispose() {
     _lifecycle.dispose();
+    _typingTimeout?.cancel();
+    _stopGivingUp();
     unawaited(_chatEvents.cancel());
     _chat.dispose();
     _session.dispose();

@@ -14,6 +14,7 @@ class MessageBubble extends StatelessWidget {
     required this.item,
     required this.maxWidth,
     this.onOpenFile,
+    this.onResend,
   });
 
   /// The message.
@@ -25,12 +26,15 @@ class MessageBubble extends StatelessWidget {
   /// Opens one of the message's files.
   final void Function(String url)? onOpenFile;
 
+  /// Sends a message the server refused again, by its client id.
+  final void Function(String clientId)? onResend;
+
   @override
   Widget build(BuildContext context) {
     final colors = SupportColors.of(context);
     final dark = colors.brightness == Brightness.dark;
     if (item.mine) {
-      return Align(
+      final bubble = Align(
         alignment: AlignmentDirectional.centerEnd,
         child: ConstrainedBox(
           constraints: BoxConstraints(maxWidth: maxWidth * 0.78),
@@ -51,6 +55,41 @@ class MessageBubble extends StatelessWidget {
             ),
           ),
         ),
+      );
+      if (item.status == BubbleStatus.sent) return bubble;
+      // On its way, or refused (app feedback spec §1).
+      final small = TextStyle(color: colors.ink3, fontSize: 11.5);
+      final clientId = item.clientId;
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        spacing: 2,
+        children: [
+          Opacity(opacity: 0.7, child: bubble),
+          if (item.status == BubbleStatus.sending)
+            Text('Sending…', style: small)
+          else
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              spacing: 4,
+              children: [
+                Text('Not sent', style: small.copyWith(color: colors.warn)),
+                TextButton(
+                  onPressed: clientId == null || onResend == null
+                      ? null
+                      : () => onResend!(clientId),
+                  style: TextButton.styleFrom(
+                    minimumSize: Size.zero,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
+                    tapTargetSize: MaterialTapTargetSize.padded,
+                  ),
+                  child: const Text('Retry', style: TextStyle(fontSize: 12.5)),
+                ),
+              ],
+            ),
+        ],
       );
     }
     final label = item.label;

@@ -227,7 +227,7 @@ class _Support {
     HelpPlace() => const HelpPage(),
     ContactPlace() => const ContactPage(),
     ConversationPlace(:final fresh) => ConversationPage(fresh: fresh),
-    TicketPlace(:final id) => TicketPage(id: id),
+    TicketPlace(:final id, :final notice) => TicketPage(id: id, notice: notice),
     CollectionPlace(:final id, :final name) => CollectionPage(
       id: id,
       name: name,

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:davodesk_flutter/davodesk_flutter.dart';
@@ -251,6 +252,67 @@ void main() {
     });
   });
 
+  // App feedback spec §1: a send that gives up shows as not sent. One written to a
+  // connection that had already died is never answered.
+  group('a message the server never answers', () {
+    const snapshot = {
+      'id': 'cs1',
+      'status': 'bot',
+      'ticket_id': null,
+      'messages': <Object?>[],
+    };
+    bool failed(DavoDeskClient client) =>
+        client.conversation.value.pending.single.failed;
+
+    test('shows as not sent after 20 seconds live', () {
+      fakeAsync((async) {
+        final (:client, api: _, :sockets, identities: _) = arrange();
+        unawaited(client.start());
+        async.flushMicrotasks();
+        sockets.single
+          ..trigger('session', snapshot)
+          ..answers['message'] = Completer<Object?>().future;
+        unawaited(client.send('Hello?'));
+        async.flushMicrotasks();
+        async.elapse(const Duration(seconds: 19));
+        expect(failed(client), isFalse);
+        async.elapse(const Duration(seconds: 1));
+        expect(failed(client), isTrue);
+        client.dispose();
+      });
+    });
+
+    test(
+      'waits as Sending… while the chat reconnects, and counts again once live',
+      () {
+        fakeAsync((async) {
+          final (:client, api: _, :sockets, identities: _) = arrange();
+          unawaited(client.start());
+          async.flushMicrotasks();
+          final socket = sockets.single
+            ..trigger('session', snapshot)
+            ..answers['message'] = Completer<Object?>().future;
+          unawaited(client.send('Hello?'));
+          async.flushMicrotasks();
+          async.elapse(const Duration(seconds: 10));
+          socket.trigger('disconnect', 'transport close');
+          async.elapse(const Duration(minutes: 1));
+          expect(failed(client), isFalse);
+
+          // Back, and the server's snapshot has not got it.
+          socket.trigger('session', snapshot);
+          async.elapse(const Duration(seconds: 19));
+          expect(failed(client), isFalse);
+          // A refresh while live does not start the count again.
+          socket.trigger('session', snapshot);
+          async.elapse(const Duration(seconds: 1));
+          expect(failed(client), isTrue);
+          client.dispose();
+        });
+      },
+    );
+  });
+
   test('a 401 opens a fresh session and tries once more', () async {
     final (:client, :api, sockets: _, identities: _) = arrange();
     api
@@ -286,6 +348,45 @@ void main() {
       client.dispose();
     },
   );
+
+  // App feedback spec §3.
+  test('asks for a fresh snapshot when the chat opens again and when the app comes back', () async {
+    final (:client, api: _, :sockets, identities: _) = arrange();
+    await client.start();
+    sockets.single.trigger('session', {
+      'id': 'cs1',
+      'status': 'bot',
+      'ticket_id': null,
+      'messages': <Object?>[],
+    });
+    await pumpEventQueue();
+    int syncs() =>
+        sockets.single.sent.where((sent) => sent[0] == 'session:sync').length;
+
+    // Home starting the chat asks for nothing more.
+    await client.start();
+    await pumpEventQueue();
+    expect(syncs(), 0);
+
+    await client.start(refresh: true);
+    await pumpEventQueue();
+    expect(syncs(), 1);
+
+    final binding = TestWidgetsFlutterBinding.instance;
+    for (final state in [
+      AppLifecycleState.inactive,
+      AppLifecycleState.hidden,
+      AppLifecycleState.paused,
+      AppLifecycleState.hidden,
+      AppLifecycleState.inactive,
+      AppLifecycleState.resumed,
+    ]) {
+      binding.handleAppLifecycleStateChanged(state);
+    }
+    await pumpEventQueue();
+    expect(syncs(), 2);
+    client.dispose();
+  });
 
   test(
     'logout ends the session, forgets the markers, and asks again next time',

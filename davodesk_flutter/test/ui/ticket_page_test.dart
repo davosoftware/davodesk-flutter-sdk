@@ -42,6 +42,19 @@ void main() {
         InMemorySharedPreferencesAsync.empty(),
   );
 
+  testWidgets('a notice sits at the top, though the request will not load', (
+    tester,
+  ) async {
+    final page = await pumpPage(
+      tester,
+      () => const TicketPage(id: 'gone', notice: 'Sent. We’ll reply here.'),
+      api: withTicket({}),
+    );
+    expect(find.text('Sent. We’ll reply here.'), findsOneWidget);
+    expect(find.text('Start again'), findsOneWidget);
+    await page.finish(tester);
+  });
+
   testWidgets('the subject, its state chip, and its messages with names', (
     tester,
   ) async {

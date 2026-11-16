@@ -47,9 +47,11 @@ class const DavoDeskColors({
   this;
 }
 
-/// The contact form's words that belong to the app: [note], the line in the highlighted
-/// card (no card without one), and an optional [extraField].
+/// The contact form's words that belong to the app: [intro], the line at its top (by
+/// default "Have a question? Our team is here to help."), [note], the line in the
+/// highlighted card (no card without one), and an optional [extraField].
 class const DavoDeskContactForm({
+  final String? intro,
   final String? note,
   final DavoDeskFormField? extraField,
 }) {

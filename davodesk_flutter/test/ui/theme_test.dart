@@ -365,7 +365,18 @@ void main() {
       final page = await pumpPage(
         tester,
         MessagesPage.new,
-        api: FakeApi()..tickets = [ticketJson('6a0000000000009bbc55')],
+        // A person on the team answered last, so the row shows their avatar.
+        api: FakeApi()
+          ..tickets = [
+            ticketJson(
+              '6a0000000000009bbc55',
+              lastMessage: {
+                'sender_type': 'staff',
+                'sender_display_name': 'Mara',
+                'preview': 'It is back on your card.',
+              },
+            ),
+          ],
         theme: const DavoDeskTheme(corners: .square),
       );
       expect(

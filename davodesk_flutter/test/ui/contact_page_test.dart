@@ -44,7 +44,7 @@ void main() {
     final page = await openContact(tester);
     for (final words in [
       'Send us a message',
-      'Have a question about your order or our services? Our team is here to help.',
+      'Have a question? Our team is here to help.',
       'Subject',
       'Message',
       'Send',
@@ -66,6 +66,36 @@ void main() {
     expect(find.text('We typically respond within 24 hours.'), findsNothing);
     expect(find.text('Subject'), findsOneWidget);
     await plain.finish(tester);
+  });
+
+  // App feedback spec §5.
+  testWidgets("the intro is neutral, or the app's own", (tester) async {
+    const neutral = 'Have a question? Our team is here to help.';
+    final plain = await openContact(tester, form: null);
+    expect(find.text(neutral), findsOneWidget);
+    // Not every app sells things.
+    expect(
+      find.textContaining(RegExp('order', caseSensitive: false)),
+      findsNothing,
+    );
+    await plain.finish(tester);
+
+    final own = await openContact(
+      tester,
+      form: const DavoDeskContactForm(
+        intro: 'Questions about a transfer? Ask us.',
+      ),
+    );
+    expect(find.text('Questions about a transfer? Ask us.'), findsOneWidget);
+    expect(find.text(neutral), findsNothing);
+    await own.finish(tester);
+
+    final blank = await openContact(
+      tester,
+      form: const DavoDeskContactForm(intro: '  '),
+    );
+    expect(find.text(neutral), findsOneWidget);
+    await blank.finish(tester);
   });
 
   testWidgets('Send waits for a subject and a message', (tester) async {

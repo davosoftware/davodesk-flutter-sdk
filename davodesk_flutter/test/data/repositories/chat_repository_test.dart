@@ -208,6 +208,42 @@ void main() {
     });
   });
 
+  // App feedback spec §§1–3.
+  test('sends the client id, hears typing, and asks for a fresh snapshot', () {
+    fakeAsync((async) {
+      final (:chat, :sockets, :events, opens: _) = arrange();
+      chat.connect();
+      async.flushMicrotasks();
+      final socket = sockets.single..trigger('session', snapshot);
+      chat.send('Hi', clientId: 'c-1');
+      chat.sync();
+      async.flushMicrotasks();
+      expect(socket.sent, [
+        [
+          'message',
+          {'content': 'Hi', 'client_id': 'c-1'},
+        ],
+        ['session:sync', <String, Object?>{}],
+      ]);
+
+      socket
+        ..trigger('typing', {'by': 'ai', 'typing': true})
+        ..trigger('typing', {'by': 'team', 'typing': true, 'name': 'Mara'})
+        ..trigger('typing', {'by': 'someone', 'typing': true});
+      async.flushMicrotasks();
+      expect(events.whereType<TypingEvent>().toList(), [
+        isA<TypingEvent>()
+            .having((e) => e.by, 'by', TypingBy.ai)
+            .having((e) => e.typing, 'typing', isTrue)
+            .having((e) => e.name, 'name', isNull),
+        isA<TypingEvent>()
+            .having((e) => e.by, 'by', TypingBy.team)
+            .having((e) => e.name, 'name', 'Mara'),
+      ]);
+      chat.dispose();
+    });
+  });
+
   test('chooses, asks for a person and confirms, returning the answers', () {
     fakeAsync((async) {
       final (:chat, :sockets, events: _, opens: _) = arrange();

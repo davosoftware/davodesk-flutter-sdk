@@ -16,6 +16,26 @@ final class const ResetEvent() extends ConversationEvent {
   this;
 }
 
+/// The customer's message [content] starts on its way as [clientId] (app feedback
+/// spec §1).
+final class const SendStarted(final String clientId, final String content)
+    extends ConversationEvent {
+  /// Creates a [SendStarted].
+  this;
+}
+
+/// The server refused the message [clientId] before it came back: "Not sent".
+final class const SendFailed(final String clientId) extends ConversationEvent {
+  /// Creates a [SendFailed].
+  this;
+}
+
+/// The not-sent message [clientId] is taken back, to go again.
+final class const SendDropped(final String clientId) extends ConversationEvent {
+  /// Creates a [SendDropped].
+  this;
+}
+
 /// What the chat socket reports.
 sealed class ChatEvent extends ConversationEvent {
   /// Creates an event.
@@ -76,6 +96,26 @@ final class const ChatErrorEvent(final String code, {final int? retryAfter})
 final class const ConnectionEvent(final ChatConnection state)
     extends ChatEvent {
   /// Creates a [ConnectionEvent].
+  this;
+}
+
+/// Who is writing an answer (app feedback spec §2).
+enum TypingBy {
+  /// DavoDesk AI.
+  ai,
+
+  /// A person on the team.
+  team,
+}
+
+/// DavoDesk AI or a person on the team started ([typing]) or stopped writing an answer;
+/// [name] is the person's name customers see, sent while they type.
+final class const TypingEvent({
+  required final TypingBy by,
+  required final bool typing,
+  final String? name,
+}) extends ChatEvent {
+  /// Creates a [TypingEvent].
   this;
 }
 

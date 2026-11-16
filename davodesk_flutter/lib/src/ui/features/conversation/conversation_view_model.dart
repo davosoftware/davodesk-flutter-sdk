@@ -3,6 +3,8 @@ import 'package:logging/logging.dart';
 
 import '../../../client.dart';
 import '../../../data/services/api_service.dart';
+import '../../../domain/chat_events.dart' show ResetEvent, TypingBy;
+import '../../../domain/conversation.dart' show reduce;
 import '../../../domain/models.dart';
 import '../../core/scope.dart';
 import '../../words.dart';
@@ -43,14 +45,42 @@ final class const BubbleItem({
   final String? logoUrl,
   final List<String> sources = const [],
   final List<Attachment> files = const [],
+  final BubbleStatus status = BubbleStatus.sent,
+  final String? clientId,
 }) extends ChatItem {
   /// Creates a [BubbleItem].
   this;
 }
 
+/// Where the customer's own message is (app feedback spec §1); [clientId] names one on
+/// its way, for Retry.
+enum BubbleStatus {
+  /// It came back from the server.
+  sent,
+
+  /// On its way: "Sending…".
+  sending,
+
+  /// The server refused it: "Not sent", with Retry.
+  failed,
+}
+
 /// "{name} joined".
 final class const JoinedItem(final String name) extends ChatItem {
   /// Creates a [JoinedItem].
+  this;
+}
+
+/// Someone writing an answer (app feedback spec §2): DavoDesk AI ([ai]), drawn under its
+/// run head, the brand's tile ([logoUrl], else the initial of [brand]); or a person on the
+/// team. [name] is who it is.
+final class const TypingItem({
+  required final bool ai,
+  required final String name,
+  final String? brand,
+  final String? logoUrl,
+}) extends ChatItem {
+  /// Creates a [TypingItem].
   this;
 }
 
@@ -103,7 +133,10 @@ class ConversationViewModel extends ChangeNotifier {
 
   /// What the conversation shows now.
   ConversationState get state {
-    final chat = _client.conversation.value;
+    // A new chat draws as one from the page's first frame; it starts just after.
+    final chat = _fresh
+        ? reduce(_client.conversation.value, const ResetEvent())
+        : _client.conversation.value;
     final brand = _config.brandName;
     final ai = _config.aiAgentName;
     final person = chat.humanJoined
@@ -154,6 +187,26 @@ class ConversationViewModel extends ChangeNotifier {
           ),
         ],
         if (joinedAt == chat.messages.length) JoinedItem(person!),
+        for (final pending in chat.pending)
+          BubbleItem(
+            id: 'pending:${pending.clientId}',
+            text: pending.content,
+            mine: true,
+            status: pending.failed ? BubbleStatus.failed : BubbleStatus.sending,
+            clientId: pending.clientId,
+          ),
+        if (chat.typing case final typing?)
+          TypingItem(
+            ai: typing.by == TypingBy.ai,
+            name: typing.by == TypingBy.ai
+                ? ai
+                : switch (typing.name?.trim()) {
+                    final String name when name.isNotEmpty => name,
+                    _ => teamName(brand),
+                  },
+            brand: brand,
+            logoUrl: _config.logoUrl,
+          ),
       ],
       choices: ended == null ? chat.options : const [],
       confirming: confirming,
@@ -183,7 +236,8 @@ class ConversationViewModel extends ChangeNotifier {
         _fresh = false;
         await _client.startNew();
       }
-      await _client.start();
+      // Opened again, the chat asks for what it may have missed (app feedback spec §3).
+      await _client.start(refresh: true);
     } on Object catch (error) {
       _log.fine('The conversation could not open: $error');
       _failed = true;
@@ -193,6 +247,12 @@ class ConversationViewModel extends ChangeNotifier {
 
   /// Sends the customer's message.
   Future<void> send(String text) => _client.send(text.trim());
+
+  /// Sends a message the server refused again.
+  Future<void> resend(String clientId) => _client.resend(clientId);
+
+  /// Asks for the conversation again, on pull-to-refresh.
+  Future<void> refresh() => _client.sync();
 
   /// Answers a choice.
   Future<void> choose(String key) => _client.choose(key);

@@ -35,7 +35,8 @@ class FakeSocket implements ChatSocket {
   /// Each call as `[event, payload]`.
   final sent = <List<Object?>>[];
 
-  /// What the server answers to an event; `{ok: true}` otherwise.
+  /// What the server answers to an event, or a Future of it for an answer that comes
+  /// later; `{ok: true}` otherwise.
   final answers = <String, Object?>{};
 
   final _handlers = <String, List<void Function(Object? data)>>{};
@@ -56,7 +57,10 @@ class FakeSocket implements ChatSocket {
   @override
   Future<Object?> emitWithAck(String event, Object? payload) async {
     sent.add([event, payload]);
-    return answers[event] ?? {'ok': true};
+    return switch (answers[event]) {
+      final Future<Object?> later => await later,
+      final answer => answer ?? {'ok': true},
+    };
   }
 
   /// The server sends [event] with [data].

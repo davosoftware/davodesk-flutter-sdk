@@ -84,8 +84,13 @@ class DavoDeskChat {
     _events.close();
   }
 
-  /// Sends the customer's message.
-  Future<ChatAck> send(String content) => _ack('message', {'content': content});
+  /// Sends the customer's message; [clientId] comes back on their copy of it (app
+  /// feedback spec §1).
+  Future<ChatAck> send(String content, {String? clientId}) =>
+      _ack('message', {'content': content, 'client_id': ?clientId});
+
+  /// Asks for the conversation again: a fresh `session` comes (app feedback spec §3).
+  Future<ChatAck> sync() => _ack('session:sync', {});
 
   /// Answers a choice the last reply offered.
   Future<ChatAck> choose(String key) => _ack('option:choose', {'key': key});
@@ -182,6 +187,22 @@ class DavoDeskChat {
             final int seconds => seconds,
             _ => null,
           },
+        ),
+      );
+    })
+    ..on('typing', (data) {
+      final json = _map(data);
+      final by = switch (json['by']) {
+        'ai' => TypingBy.ai,
+        'team' => TypingBy.team,
+        _ => null,
+      };
+      if (by == null) return;
+      _emit(
+        TypingEvent(
+          by: by,
+          typing: json['typing'] == true,
+          name: _string(json['name']),
         ),
       );
     })
