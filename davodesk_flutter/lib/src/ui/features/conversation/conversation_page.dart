@@ -31,12 +31,17 @@ class _ConversationPageState extends State<ConversationPage> {
     super.didChangeDependencies();
     if (_model == null) {
       final scope = SupportScope.of(context);
-      _model = ConversationViewModel(
+      final model = _model = ConversationViewModel(
         scope.client,
         scope.config,
         scope.pickAttachment,
         fresh: widget.fresh,
-      )..load();
+      );
+      // After the first frame: opening tells the pages below, such as Home, which
+      // must not hear of it mid-build (app feedback spec §7).
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) model.load();
+      });
     }
   }
 

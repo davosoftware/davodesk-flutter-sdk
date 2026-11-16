@@ -243,6 +243,25 @@ void main() {
     },
   );
 
+  // App feedback spec §7.
+  testWidgets(
+    'Start a new chat from Chats while Home is open raises no assertion',
+    (tester) async {
+      final (:context, api: _, sockets: _, events: _) = await host(tester);
+      DavoDesk.show(context);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Chat with us'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Start a new chat'));
+      await tester.pump();
+      // Home listens to the chat; it must not be told mid-build.
+      expect(tester.takeException(), isNull);
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      await finish(tester);
+    },
+  );
+
   testWidgets('openTicket opens that ticket', (tester) async {
     final (:context, api: _, sockets: _, events: _) = await host(
       tester,

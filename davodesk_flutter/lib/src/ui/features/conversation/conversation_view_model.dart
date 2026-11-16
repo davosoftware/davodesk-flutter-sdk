@@ -3,7 +3,8 @@ import 'package:logging/logging.dart';
 
 import '../../../client.dart';
 import '../../../data/services/api_service.dart';
-import '../../../domain/chat_events.dart' show TypingBy;
+import '../../../domain/chat_events.dart' show ResetEvent, TypingBy;
+import '../../../domain/conversation.dart' show reduce;
 import '../../../domain/models.dart';
 import '../../core/scope.dart';
 import '../../words.dart';
@@ -132,7 +133,10 @@ class ConversationViewModel extends ChangeNotifier {
 
   /// What the conversation shows now.
   ConversationState get state {
-    final chat = _client.conversation.value;
+    // A new chat draws as one from the page's first frame; it starts just after.
+    final chat = _fresh
+        ? reduce(_client.conversation.value, const ResetEvent())
+        : _client.conversation.value;
     final brand = _config.brandName;
     final ai = _config.aiAgentName;
     final person = chat.humanJoined
