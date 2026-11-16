@@ -217,4 +217,35 @@ void main() {
       );
     });
   });
+
+  // App feedback spec §2: dots while DavoDesk AI or a person on the team writes.
+  group('someone typing', () {
+    test('DavoDesk AI typing shows until its answer comes', () {
+      final typing = run([const TypingEvent(by: .ai, typing: true)]);
+      expect(typing.typing?.by, TypingBy.ai);
+      expect(reduce(typing, MessageEvent(message())).typing, isNull);
+    });
+
+    test("the team's typing goes with typing false or the team's message", () {
+      final team = run([
+        const TypingEvent(by: .team, typing: true, name: 'Mara'),
+      ]);
+      expect(team.typing?.name, 'Mara');
+      expect(reduce(team, MessageEvent(message())).typing, isNotNull);
+      expect(
+        reduce(team, MessageEvent(message(sender: .staff))).typing,
+        isNull,
+      );
+      expect(
+        reduce(team, const TypingEvent(by: .team, typing: false)).typing,
+        isNull,
+      );
+    });
+
+    test('the chat ending, or starting anew, clears it', () {
+      const ai = TypingEvent(by: .ai, typing: true);
+      expect(run([ai, const EndedEvent('idle')]).typing, isNull);
+      expect(run([ai, const ResetEvent()]).typing, isNull);
+    });
+  });
 }

@@ -5,6 +5,7 @@ import '../../theme.dart';
 import '../../widgets/brand_tile.dart';
 import '../../widgets/composer.dart';
 import '../../widgets/message_bubble.dart';
+import '../../widgets/typing_bubble.dart';
 import '../../widgets/recover.dart';
 import 'conversation_view_model.dart';
 
@@ -249,6 +250,10 @@ class _ConversationViewState extends State<ConversationView> {
             onResend: widget.onResend,
           ),
           JoinedItem(:final name) => centered('$name joined'),
+          TypingItem() => TypingBubble(
+            key: const ValueKey('typing'),
+            item: item,
+          ),
         },
       if (state.confirming)
         Wrap(

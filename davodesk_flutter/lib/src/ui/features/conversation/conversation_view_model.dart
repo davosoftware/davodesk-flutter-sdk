@@ -3,6 +3,7 @@ import 'package:logging/logging.dart';
 
 import '../../../client.dart';
 import '../../../data/services/api_service.dart';
+import '../../../domain/chat_events.dart' show TypingBy;
 import '../../../domain/models.dart';
 import '../../core/scope.dart';
 import '../../words.dart';
@@ -66,6 +67,19 @@ enum BubbleStatus {
 /// "{name} joined".
 final class const JoinedItem(final String name) extends ChatItem {
   /// Creates a [JoinedItem].
+  this;
+}
+
+/// Someone writing an answer (app feedback spec §2): DavoDesk AI ([ai]), drawn under its
+/// run head, the brand's tile ([logoUrl], else the initial of [brand]); or a person on the
+/// team. [name] is who it is.
+final class const TypingItem({
+  required final bool ai,
+  required final String name,
+  final String? brand,
+  final String? logoUrl,
+}) extends ChatItem {
+  /// Creates a [TypingItem].
   this;
 }
 
@@ -176,6 +190,18 @@ class ConversationViewModel extends ChangeNotifier {
             mine: true,
             status: pending.failed ? BubbleStatus.failed : BubbleStatus.sending,
             clientId: pending.clientId,
+          ),
+        if (chat.typing case final typing?)
+          TypingItem(
+            ai: typing.by == TypingBy.ai,
+            name: typing.by == TypingBy.ai
+                ? ai
+                : switch (typing.name?.trim()) {
+                    final String name when name.isNotEmpty => name,
+                    _ => teamName(brand),
+                  },
+            brand: brand,
+            logoUrl: _config.logoUrl,
           ),
       ],
       choices: ended == null ? chat.options : const [],

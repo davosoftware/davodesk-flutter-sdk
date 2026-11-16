@@ -357,6 +357,42 @@ void main() {
     await page.finish(tester);
   });
 
+  testWidgets(
+    'DavoDesk AI typing shows under its head and goes with its answer',
+    (tester) async {
+      final (page, socket) = await open(tester);
+      socket.trigger('typing', {'by': 'ai', 'typing': true});
+      // Not pumpAndSettle: the dots never settle while they show.
+      await tester.pump();
+      await tester.pump();
+      expect(find.bySemanticsLabel(RegExp('Callie is typing')), findsOneWidget);
+
+      socket.trigger('message', {
+        'id': 'm2',
+        'sender_type': 'bot',
+        'content': 'Here is how.',
+      });
+      await tester.pump();
+      expect(find.bySemanticsLabel(RegExp('Callie is typing')), findsNothing);
+      await page.finish(tester);
+    },
+  );
+
+  testWidgets(
+    "the team's typing shows the member's name and goes after 8 seconds",
+    (tester) async {
+      final (page, socket) = await open(tester);
+      socket.trigger('typing', {'by': 'team', 'typing': true, 'name': 'Mara'});
+      await tester.pump();
+      await tester.pump();
+      expect(find.bySemanticsLabel(RegExp('Mara is typing')), findsOneWidget);
+
+      await tester.pump(const Duration(seconds: 8));
+      expect(find.bySemanticsLabel(RegExp('Mara is typing')), findsNothing);
+      await page.finish(tester);
+    },
+  );
+
   testWidgets('a refused send offers Retry, which sends it again', (
     tester,
   ) async {

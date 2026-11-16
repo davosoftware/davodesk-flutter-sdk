@@ -15,6 +15,7 @@ const _keep = Object();
 /// - [limitedFor] is how long the server asked the customer to wait before writing
 ///   again (a minute when it didn't say); null when they may write.
 /// - [pending] are the customer's messages on their way, oldest first.
+/// - [typing] is who is writing an answer now; null when no one is.
 class const Conversation({
   final String status = 'none',
   final String? ticketId,
@@ -26,6 +27,7 @@ class const Conversation({
   final ChatConnection connection = .connecting,
   final Duration? limitedFor,
   final List<PendingMessage> pending = const [],
+  final ChatTyping? typing,
 }) {
   /// Creates a conversation; with no arguments, the one before the chat connects.
   this;
@@ -41,6 +43,7 @@ class const Conversation({
     ChatConnection? connection,
     Object? limitedFor = _keep,
     List<PendingMessage>? pending,
+    Object? typing = _keep,
   }) => Conversation(
     status: status ?? this.status,
     ticketId: identical(ticketId, _keep) ? this.ticketId : ticketId as String?,
@@ -56,8 +59,25 @@ class const Conversation({
         ? this.limitedFor
         : limitedFor as Duration?,
     pending: pending ?? this.pending,
+    typing: identical(typing, _keep) ? this.typing : typing as ChatTyping?,
   );
 }
+
+/// Who is writing an answer (app feedback spec §2): DavoDesk AI, or a person on the
+/// team, with the [name] customers see for them.
+class const ChatTyping(final TypingBy by, {final String? name}) {
+  /// Creates a [ChatTyping].
+  this;
+}
+
+/// Typing ends with a message from whoever was typing.
+ChatTyping? _typingAfter(ChatTyping? typing, ChatMessage message) => switch ((
+  typing?.by,
+  message.senderType,
+)) {
+  (TypingBy.ai, SenderType.bot) || (TypingBy.team, SenderType.staff) => null,
+  _ => typing,
+};
 
 /// A message the customer sent that has not come back from the server yet (app
 /// feedback spec §1); [failed] once it was refused: "Not sent", with Retry.
@@ -90,6 +110,7 @@ Conversation reduce(Conversation state, ConversationEvent event) =>
         status: 'closed',
         ended: reason,
         options: const [],
+        typing: null,
       ),
       ResolvedEvent(:final ticketId) => state._with(
         status: 'closed',
@@ -103,8 +124,11 @@ Conversation reduce(Conversation state, ConversationEvent event) =>
       ConnectionEvent(state: final connection) => state._with(
         connection: connection,
       ),
-      // Who is typing is drawn from Task 3 of the app feedback plan on.
-      TypingEvent() => state,
+      TypingEvent(:final by, typing: true, :final name) => state._with(
+        typing: ChatTyping(by, name: name),
+      ),
+      TypingEvent(:final by) =>
+        state.typing?.by == by ? state._with(typing: null) : state,
       ResetEvent() => Conversation(connection: state.connection),
       SendStarted(:final clientId, :final content) => state._with(
         pending: List.unmodifiable([
@@ -151,7 +175,11 @@ Conversation _withMessage(Conversation state, ChatMessage message) {
           limitedFor: null,
           pending: _settled(state.pending, message),
         )
-      : state._with(messages: messages, options: message.options);
+      : state._with(
+          messages: messages,
+          options: message.options,
+          typing: _typingAfter(state.typing, message),
+        );
 }
 
 /// A snapshot replaces what came before; only a message of the customer's it had not
@@ -165,11 +193,14 @@ Conversation _replayed(Conversation state, SessionSnapshot snapshot) {
       options: const [],
       ended: null,
       pending: const [],
+      // Old messages say nothing of who is typing now: it carries on as it was.
+      typing: null,
     ),
     _withMessage,
   );
   final known = {for (final each in state.messages) each.id};
   return replayed._with(
+    typing: state.typing,
     pending: snapshot.messages
         .where(
           (each) => each.senderType == .endUser && !known.contains(each.id),

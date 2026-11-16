@@ -62,6 +62,16 @@ class DavoDeskClient {
     );
     _chatEvents = _chat.events.listen((event) {
       _conversation.value = reduce(_conversation.value, event);
+      // Typing not said again goes after a while (app feedback spec §2).
+      if (event case TypingEvent(:final by, typing: true)) {
+        _typingTimeout?.cancel();
+        _typingTimeout = Timer(typingLasts, () {
+          _conversation.value = reduce(
+            _conversation.value,
+            TypingEvent(by: by, typing: false),
+          );
+        });
+      }
       // An ended chat answers nothing more: the next message needs a new one. A closed
       // ticket waits for the customer's Start a new conversation.
       if (event case EndedEvent(reason: 'helped' || 'idle')) {
@@ -92,6 +102,10 @@ class DavoDeskClient {
   final _conversation = ValueNotifier(const Conversation());
   final _tickets = ValueNotifier<List<TicketSummary>>(const []);
   final _unread = ValueNotifier(0);
+
+  /// How long typing lasts when it is not said again.
+  static const typingLasts = Duration(seconds: 8);
+  Timer? _typingTimeout;
 
   Future<ChannelConfig>? _config;
   ChannelConfig? _lastConfig;
@@ -350,6 +364,7 @@ class DavoDeskClient {
   /// Stops everything the client runs.
   void dispose() {
     _lifecycle.dispose();
+    _typingTimeout?.cancel();
     unawaited(_chatEvents.cancel());
     _chat.dispose();
     _session.dispose();
