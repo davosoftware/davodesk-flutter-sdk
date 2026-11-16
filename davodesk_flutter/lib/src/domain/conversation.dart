@@ -97,6 +97,8 @@ Conversation reduce(Conversation state, ConversationEvent event) =>
       ConnectionEvent(state: final connection) => state._with(
         connection: connection,
       ),
+      // Who is typing is drawn from Task 3 of the app feedback plan on.
+      TypingEvent() => state,
       ResetEvent() => Conversation(connection: state.connection),
     };
 

@@ -79,6 +79,26 @@ final class const ConnectionEvent(final ChatConnection state)
   this;
 }
 
+/// Who is writing an answer (app feedback spec §2).
+enum TypingBy {
+  /// DavoDesk AI.
+  ai,
+
+  /// A person on the team.
+  team,
+}
+
+/// DavoDesk AI or a person on the team started ([typing]) or stopped writing an answer;
+/// [name] is the person's name customers see, sent while they type.
+final class const TypingEvent({
+  required final TypingBy by,
+  required final bool typing,
+  final String? name,
+}) extends ChatEvent {
+  /// Creates a [TypingEvent].
+  this;
+}
+
 /// How the chat's connection stands.
 enum ChatConnection {
   /// Opening the session and the socket.

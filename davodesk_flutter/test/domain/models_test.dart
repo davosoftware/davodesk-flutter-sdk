@@ -17,6 +17,17 @@ void main() {
     expect(ChatMessage.fromJson(bot()).aiWritten, isNull);
   });
 
+  test("reads the client id that comes back on the customer's own message", () {
+    final mine = {
+      'id': 'm2',
+      'sender_type': 'end_user',
+      'content': 'Hi',
+      'client_id': 'c-1',
+    };
+    expect(ChatMessage.fromJson(mine).clientId, 'c-1');
+    expect(ChatMessage.fromJson(bot()).clientId, isNull);
+  });
+
   test('reads the channel’s corners', () {
     ChannelLook look(Object? corners) =>
         ChannelLook.fromJson({'accent_color': '#0e9384', 'corners': ?corners});

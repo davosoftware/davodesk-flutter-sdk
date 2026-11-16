@@ -223,6 +223,9 @@ class const ChatMessage({
   /// DavoDesk AI wrote this bot message; null from an API that predates it, which earns
   /// no ✦ rather than a guess.
   final bool? aiWritten,
+
+  /// On the customer's own message: the id their send carried (app feedback spec §1).
+  final String? clientId,
 }) {
   /// Creates a [ChatMessage].
   this;
@@ -253,6 +256,7 @@ class const ChatMessage({
       final bool written => written,
       _ => null,
     },
+    clientId: _string(json['client_id']),
   );
 }
 
