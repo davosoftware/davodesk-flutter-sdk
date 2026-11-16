@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../core/scope.dart';
 import '../../theme.dart';
+import '../../widgets/brand_tile.dart';
 import '../../widgets/recover.dart';
 import '../../widgets/state_chip.dart';
 import 'messages_view_model.dart';
@@ -106,6 +107,11 @@ class MessagesView extends StatelessWidget {
                       itemCount: rows.length,
                       itemBuilder: (context, i) => _ConversationRow(
                         row: rows[i],
+                        brand: BrandTile(
+                          logoUrl: state.logoUrl,
+                          name: state.brandName,
+                          size: 36,
+                        ),
                         onTap: () => onOpen(rows[i].id),
                       ),
                     ),
@@ -215,9 +221,16 @@ class _Empty extends StatelessWidget {
 }
 
 class _ConversationRow extends StatelessWidget {
-  const _ConversationRow({required this.row, required this.onTap});
+  const _ConversationRow({
+    required this.row,
+    required this.brand,
+    required this.onTap,
+  });
 
   final MessageRow row;
+
+  /// The avatar when nobody on the team answered last.
+  final Widget brand;
   final VoidCallback onTap;
 
   @override
@@ -235,23 +248,26 @@ class _ConversationRow extends StatelessWidget {
           spacing: 12,
           children: [
             ExcludeSemantics(
-              child: Container(
-                width: 36,
-                height: 36,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: colors.accentSoft,
-                  shape: BoxShape.circle,
-                ),
-                child: Text(
-                  row.initial,
-                  style: TextStyle(
-                    color: colors.accentInk,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
+              child: switch (row.answeredBy?.trim()) {
+                final String person when person.isNotEmpty => Container(
+                  width: 36,
+                  height: 36,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: colors.accentSoft,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Text(
+                    person.characters.first.toUpperCase(),
+                    style: TextStyle(
+                      color: colors.accentInk,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
-              ),
+                _ => brand,
+              },
             ),
             Expanded(
               child: Column(

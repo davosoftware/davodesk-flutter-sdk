@@ -7,7 +7,8 @@ import '../../words.dart';
 
 final _log = Logger('DavoDesk');
 
-/// One conversation in the list.
+/// One conversation in the list; [answeredBy] is the person on the team who wrote
+/// last, if one did.
 class const MessageRow({
   required final String id,
   required final String subject,
@@ -16,22 +17,21 @@ class const MessageRow({
   final String line = '',
   final String day = '',
   final bool unread = false,
+  final String? answeredBy,
 }) {
   /// Creates a [MessageRow].
   this;
-
-  /// The avatar's letter: the first of who wrote last, else of the subject.
-  String get initial {
-    final text = line.isNotEmpty ? line : subject;
-    return text.isEmpty ? '?' : text.characters.first.toUpperCase();
-  }
 }
 
-/// What Messages shows.
+/// What Messages shows; a row nobody on the team answered last shows the brand's tile
+/// ([logoUrl], else the initial of [brandName]), as the chat's header does (app
+/// feedback spec §6).
 class const MessagesState({
   final List<MessageRow> rows = const [],
   final bool loading = false,
   final bool failed = false,
+  final String brandName = '',
+  final String? logoUrl,
 }) {
   /// Creates a [MessagesState].
   this;
@@ -74,10 +74,22 @@ class MessagesViewModel extends ChangeNotifier {
             null => '',
           },
           unread: _client.isUnread(ticket),
+          answeredBy: switch (ticket.lastMessage) {
+            LastMessage(senderType: .staff, :final senderDisplayName) =>
+              speakerName(
+                .staff,
+                senderDisplayName,
+                brand: _config.brandName,
+                aiName: _config.aiAgentName,
+              ),
+            _ => null,
+          },
         ),
     ],
     loading: _loading,
     failed: _failed,
+    brandName: _config.brandName,
+    logoUrl: _config.logoUrl,
   );
 
   /// Reads the tickets again.

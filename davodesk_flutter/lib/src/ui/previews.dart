@@ -83,6 +83,7 @@ const _home = HomeState(
 );
 
 const _messages = MessagesState(
+  brandName: 'Davopay',
   rows: [
     MessageRow(
       id: '6a0000000000009bbc55',
@@ -92,6 +93,7 @@ const _messages = MessagesState(
       line: 'Mara: The refund is back on your card',
       day: '9 Nov',
       unread: true,
+      answeredBy: 'Mara',
     ),
     MessageRow(
       id: 'a00000000000a31f07',
