@@ -107,7 +107,7 @@ void main() {
     expect(sockets.single.sent, [
       [
         'message',
-        {'content': 'Where is my order?'},
+        {'content': 'Where is my order?', 'client_id': isA<String>()},
       ],
     ]);
     await finish(tester);
