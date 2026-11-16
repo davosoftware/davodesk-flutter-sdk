@@ -204,6 +204,7 @@ Widget _conversationView(Brightness brightness, ConversationState state) =>
         onAttach: (_) {},
         onOpenFile: (_) {},
         onRetry: () {},
+        onResend: (_) {},
         onBack: () {},
       ),
     );

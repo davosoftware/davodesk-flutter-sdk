@@ -58,6 +58,7 @@ class _ConversationPageState extends State<ConversationPage> {
         onStartNew: model.startNew,
         onAttach: model.attach,
         onOpenFile: (url) => scope.openLink(Uri.parse(url)),
+        onResend: model.resend,
         onRetry: model.load,
         onBack: () => Navigator.maybePop(context),
       ),
@@ -79,6 +80,7 @@ class ConversationView extends StatefulWidget {
     required this.onAttach,
     required this.onOpenFile,
     required this.onRetry,
+    required this.onResend,
     required this.onBack,
   });
 
@@ -108,6 +110,9 @@ class ConversationView extends StatefulWidget {
 
   /// Opens the conversation again after a failure.
   final VoidCallback onRetry;
+
+  /// Sends a message the server refused again, by its client id.
+  final void Function(String clientId) onResend;
 
   /// Goes back.
   final VoidCallback onBack;
@@ -241,6 +246,7 @@ class _ConversationViewState extends State<ConversationView> {
             item: item,
             maxWidth: width - 28,
             onOpenFile: widget.onOpenFile,
+            onResend: widget.onResend,
           ),
           JoinedItem(:final name) => centered('$name joined'),
         },

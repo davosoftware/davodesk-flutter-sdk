@@ -318,10 +318,67 @@ void main() {
     expect(socket.sent, [
       [
         'message',
-        {'content': 'Where is my card?'},
+        {'content': 'Where is my card?', 'client_id': isA<String>()},
       ],
     ]);
-    expect(find.text('Where is my card?'), findsNothing);
+    // The box empties; the message itself shows as sending (app feedback spec §1).
+    expect(
+      find.descendant(
+        of: find.byType(TextField),
+        matching: find.text('Where is my card?'),
+      ),
+      findsNothing,
+    );
+    await page.finish(tester);
+  });
+
+  testWidgets('a message shows at once as Sending…, then as sent', (
+    tester,
+  ) async {
+    final (page, socket) = await open(tester);
+    await tester.enterText(find.byType(TextField), 'Where is my card?');
+    await tester.pump();
+    await tester.tap(find.bySemanticsLabel('Send'));
+    await tester.pumpAndSettle();
+    expect(find.text('Where is my card?'), findsOneWidget);
+    expect(find.text('Sending…'), findsOneWidget);
+
+    final clientId =
+        (socket.sent.single[1]! as Map<String, Object?>)['client_id'];
+    socket.trigger('message', {
+      'id': 'm2',
+      'sender_type': 'end_user',
+      'content': 'Where is my card?',
+      'client_id': clientId,
+    });
+    await tester.pumpAndSettle();
+    expect(find.text('Sending…'), findsNothing);
+    expect(find.text('Where is my card?'), findsOneWidget);
+    await page.finish(tester);
+  });
+
+  testWidgets('a refused send offers Retry, which sends it again', (
+    tester,
+  ) async {
+    final (page, socket) = await open(tester);
+    socket.answers['message'] = {'ok': false};
+    await tester.enterText(find.byType(TextField), 'Hello?');
+    await tester.pump();
+    await tester.tap(find.bySemanticsLabel('Send'));
+    await tester.pumpAndSettle();
+    expect(find.text('Not sent'), findsOneWidget);
+
+    socket.answers.remove('message');
+    await tester.tap(find.text('Retry'));
+    await tester.pumpAndSettle();
+    expect(socket.sent, hasLength(2));
+    final ids = [
+      for (final sent in socket.sent)
+        (sent[1]! as Map<String, Object?>)['client_id'],
+    ];
+    expect(ids[0], isNot(ids[1]));
+    expect(find.text('Sending…'), findsOneWidget);
+    expect(find.text('Hello?'), findsOneWidget);
     await page.finish(tester);
   });
 

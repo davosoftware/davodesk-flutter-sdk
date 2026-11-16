@@ -43,9 +43,24 @@ final class const BubbleItem({
   final String? logoUrl,
   final List<String> sources = const [],
   final List<Attachment> files = const [],
+  final BubbleStatus status = BubbleStatus.sent,
+  final String? clientId,
 }) extends ChatItem {
   /// Creates a [BubbleItem].
   this;
+}
+
+/// Where the customer's own message is (app feedback spec §1); [clientId] names one on
+/// its way, for Retry.
+enum BubbleStatus {
+  /// It came back from the server.
+  sent,
+
+  /// On its way: "Sending…".
+  sending,
+
+  /// The server refused it: "Not sent", with Retry.
+  failed,
 }
 
 /// "{name} joined".
@@ -154,6 +169,14 @@ class ConversationViewModel extends ChangeNotifier {
           ),
         ],
         if (joinedAt == chat.messages.length) JoinedItem(person!),
+        for (final pending in chat.pending)
+          BubbleItem(
+            id: 'pending:${pending.clientId}',
+            text: pending.content,
+            mine: true,
+            status: pending.failed ? BubbleStatus.failed : BubbleStatus.sending,
+            clientId: pending.clientId,
+          ),
       ],
       choices: ended == null ? chat.options : const [],
       confirming: confirming,
@@ -193,6 +216,9 @@ class ConversationViewModel extends ChangeNotifier {
 
   /// Sends the customer's message.
   Future<void> send(String text) => _client.send(text.trim());
+
+  /// Sends a message the server refused again.
+  Future<void> resend(String clientId) => _client.resend(clientId);
 
   /// Answers a choice.
   Future<void> choose(String key) => _client.choose(key);

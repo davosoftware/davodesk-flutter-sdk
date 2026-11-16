@@ -16,6 +16,26 @@ final class const ResetEvent() extends ConversationEvent {
   this;
 }
 
+/// The customer's message [content] starts on its way as [clientId] (app feedback
+/// spec §1).
+final class const SendStarted(final String clientId, final String content)
+    extends ConversationEvent {
+  /// Creates a [SendStarted].
+  this;
+}
+
+/// The server refused the message [clientId] before it came back: "Not sent".
+final class const SendFailed(final String clientId) extends ConversationEvent {
+  /// Creates a [SendFailed].
+  this;
+}
+
+/// The not-sent message [clientId] is taken back, to go again.
+final class const SendDropped(final String clientId) extends ConversationEvent {
+  /// Creates a [SendDropped].
+  this;
+}
+
 /// What the chat socket reports.
 sealed class ChatEvent extends ConversationEvent {
   /// Creates an event.

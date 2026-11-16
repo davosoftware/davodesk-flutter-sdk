@@ -188,7 +188,41 @@ class DavoDeskClient {
   bool isUnread(TicketSummary ticket) => seen.isUnread(ticket, _seen.markers);
 
   /// Sends the customer's message in the conversation.
-  Future<ChatAck> send(String text) => _chat.send(text);
+  Future<ChatAck> send(String text) async {
+    // It shows at once as on its way, then as sent when it comes back, or as not sent
+    // when the server refuses it first (app feedback spec §1).
+    final clientId = _newClientId();
+    _conversation.value = reduce(
+      _conversation.value,
+      SendStarted(clientId, text),
+    );
+    ChatAck ack;
+    try {
+      ack = await _chat.send(text, clientId: clientId);
+    } on Object catch (error) {
+      _log.fine('The message did not go: $error');
+      ack = const ChatAck(ok: false);
+    }
+    if (!ack.ok) {
+      _conversation.value = reduce(_conversation.value, SendFailed(clientId));
+    }
+    return ack;
+  }
+
+  /// Sends a message the server refused again, as a new one.
+  Future<void> resend(String clientId) async {
+    final refused = _conversation.value.pending
+        .where((each) => each.clientId == clientId && each.failed)
+        .firstOrNull;
+    if (refused == null) return;
+    _conversation.value = reduce(_conversation.value, SendDropped(clientId));
+    await send(refused.content);
+  }
+
+  String _newClientId() => [
+    for (var i = 0; i < 16; i++)
+      _random.nextInt(256).toRadixString(16).padLeft(2, '0'),
+  ].join();
 
   /// Answers a choice the last reply offered.
   Future<ChatAck> choose(String key) => _chat.choose(key);

@@ -148,4 +148,73 @@ void main() {
     expect(state.messages, isEmpty);
     expect(state.humanJoined, isFalse);
   });
+
+  // App feedback spec §1: a sent message shows at once, then as sent, or not sent.
+  group('a message being sent', () {
+    ChatMessage mine(String content, [String? clientId]) => ChatMessage(
+      id: 'm${++_seq}',
+      senderType: .endUser,
+      content: content,
+      clientId: clientId,
+    );
+    SessionEvent snapshot(List<ChatMessage> messages) => SessionEvent(
+      SessionSnapshot(id: 'cs1', status: 'bot', messages: messages),
+    );
+
+    test('shows at once, and its echo replaces it', () {
+      final sending = run([const SendStarted('c1', 'Hi')]);
+      expect(sending.pending.single.content, 'Hi');
+      expect(sending.pending.single.failed, isFalse);
+      final sent = reduce(sending, MessageEvent(mine('Hi', 'c1')));
+      expect(sent.pending, isEmpty);
+      expect(sent.messages.map((m) => m.content), ['Hi']);
+    });
+
+    test('a refused send is marked not sent, and Retry takes it away', () {
+      final failed = run([
+        const SendStarted('c1', 'Hi'),
+        const SendFailed('c1'),
+      ]);
+      expect(failed.pending.single.failed, isTrue);
+      expect(reduce(failed, const SendDropped('c1')).pending, isEmpty);
+    });
+
+    test('two identical messages each find their own echo', () {
+      final state = run([
+        const SendStarted('c1', 'ok'),
+        const SendStarted('c2', 'ok'),
+        MessageEvent(mine('ok', 'c2')),
+      ]);
+      expect(state.pending.map((p) => p.clientId), ['c1']);
+    });
+
+    test(
+      'an echo from an older API replaces the oldest with the same words',
+      () {
+        final state = run([
+          const SendStarted('c1', 'ok'),
+          const SendStarted('c2', 'ok'),
+          MessageEvent(mine('ok')),
+        ]);
+        expect(state.pending.map((p) => p.clientId), ['c2']);
+      },
+    );
+
+    test('a snapshot after a reconnect replaces it only with a message it had not seen', () {
+      final earlier = mine('ok');
+      final known = run([
+        snapshot([earlier]),
+        const SendStarted('c1', 'ok'),
+      ]);
+      expect(reduce(known, snapshot([earlier])).pending, hasLength(1));
+      expect(reduce(known, snapshot([earlier, mine('ok')])).pending, isEmpty);
+    });
+
+    test('starting anew forgets it', () {
+      expect(
+        run([const SendStarted('c1', 'Hi'), const ResetEvent()]).pending,
+        isEmpty,
+      );
+    });
+  });
 }
