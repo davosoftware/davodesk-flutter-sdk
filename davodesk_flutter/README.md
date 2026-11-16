@@ -74,7 +74,8 @@ You need three things:
      channelId: 'ch_…', // your brand's app channel
      identityToken: () => myBackend.fetchDavoDeskIdentityToken(), // null when signed out
      theme: const DavoDeskTheme(accent: Color(0xFF1E5AF0)), // optional
-     contactForm: const DavoDeskContactForm(
+     contactForm: const DavoDeskContactForm( // optional
+       intro: 'Questions about a payment? Our team is here to help.',
        note: 'We typically respond within 24 hours.',
        extraField: DavoDeskFormField(label: 'Order ID', hint: 'e.g. #VP-8291'),
      ),
@@ -100,6 +101,11 @@ You need three things:
    session runs out, after a `401`, and when the app comes back to the foreground. Keep it
    cheap and return a fresh token each time.
 
+   `contactForm` holds the contact form's own words: `intro`, its first line ("Have a
+   question? Our team is here to help." without one); `note`, a highlighted line such as
+   your reply time; and `extraField`, an extra field (an order number, say) whose value goes
+   first in the message.
+
 4. **Open support:**
 
    ```dart
@@ -115,12 +121,36 @@ You need three things:
 6. **Log out** with `await DavoDesk.logout()` when the user signs out: it closes support,
    ends the session and forgets the user on the device.
 
+## What the chat does on its own
+
+None of this needs code in your app.
+
+- **Sending.** A message shows at once as "Sending…", then as sent. One the server refuses
+  shows "Not sent" with Retry.
+- **Typing.** Dots show while DavoDesk AI writes an answer, under the bot's name, and while
+  someone on the team writes a reply, under their name.
+- **Keeping up.** The chat asks for anything it missed when it opens, when your app comes
+  back to the foreground, and when the customer pulls it down. A message the customer sends
+  through the contact form shows in the chat too.
+- **The newest line in view.** A long chat stays at its end as lines arrive and when the
+  keyboard opens. A new bubble fades in and rises; nothing moves when the phone asks for
+  less motion.
+- **Send us a message.** A message joins the customer's open request when it has the same
+  subject, or none; another subject starts a new request. The request then opens saying
+  which: "Added to your open request #8DEE9D" or "Sent. We'll reply here."
+- **Chats.** Each row shows the initial of the team member who answered last, or else your
+  brand's logo.
+- **Dictation.** The keyboard's own microphone types into the chat box. There are no voice
+  notes.
+
 ## The look
 
 The screens run on your app's navigator as full-screen pages. Out of the box they follow
 your app's light or dark setting (the phone's, when your app uses the framework's Material
 rather than `material_ui`), take the accent colour and the corners set for the channel in
-DavoDesk, and use DavoDesk's own greys.
+DavoDesk, and use DavoDesk's own greys. They bring their own words and theme, the
+attachment sheet and the text toolbar included, so an app on the framework's Material has
+nothing to add to its `localizationsDelegates`.
 
 **Set in DavoDesk, with no code.** On the brand's **Chat look** page:
 
@@ -223,8 +253,8 @@ A colour you leave out keeps DavoDesk's, so set `background`, `surface` and `bor
 
 1. Sign in as a test user and call `DavoDesk.show(context)`: Home opens under your brand's
    header.
-2. Start a chat and ask a question: the bot answers under the brand's logo and the bot's
-   name.
+2. Start a chat and ask a question: your message shows at once, typing dots follow, and
+   the bot answers under the brand's logo and the bot's name.
 3. Ask for a person, or send the contact form: the ticket shows in DavoDesk, under that
    brand.
 4. Change the bot's name on the Chat look page, close support and open it again: the new
