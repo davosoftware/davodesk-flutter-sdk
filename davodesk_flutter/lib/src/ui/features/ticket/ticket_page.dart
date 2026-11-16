@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../../core/scope.dart';
+import '../../core/support_shell.dart';
 import '../../theme.dart';
 import '../../widgets/message_bubble.dart';
 import '../../widgets/page_bar.dart';
@@ -281,6 +282,7 @@ class _RatingCardState extends State<_RatingCard> {
           ),
           TextField(
             controller: _comment,
+            contextMenuBuilder: supportContextMenu(context),
             minLines: 2,
             maxLines: 4,
             maxLength: 1000,

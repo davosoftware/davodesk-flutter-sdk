@@ -4,6 +4,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../domain/models.dart' show RaisedTicket, RequestSubject;
 import '../../core/scope.dart';
+import '../../core/support_shell.dart';
 import '../../theme.dart';
 import '../../widgets/page_bar.dart';
 import '../../widgets/status_banner.dart';
@@ -271,6 +272,7 @@ class _Field extends StatelessWidget {
     final colors = SupportColors.of(context);
     return TextField(
       controller: controller,
+      contextMenuBuilder: supportContextMenu(context),
       minLines: lines,
       maxLines: lines == 1 ? 1 : 8,
       textCapitalization: TextCapitalization.sentences,

@@ -53,27 +53,23 @@ class _ComposerState extends State<Composer> {
   }
 
   Future<void> _attach() async {
-    final colors = SupportColors.of(context);
-    final from = await showModalBottomSheet<AttachFrom>(
-      context: context,
-      builder: (sheet) => SupportShell(
-        colors: colors,
-        child: SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: const Icon(Icons.photo_outlined),
-                title: const Text('Photo'),
-                onTap: () => Navigator.pop(sheet, AttachFrom.photos),
-              ),
-              ListTile(
-                leading: const Icon(Icons.picture_as_pdf_outlined),
-                title: const Text('File'),
-                onTap: () => Navigator.pop(sheet, AttachFrom.files),
-              ),
-            ],
-          ),
+    final from = await showSupportSheet<AttachFrom>(
+      context,
+      builder: (sheet) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.photo_outlined),
+              title: const Text('Photo'),
+              onTap: () => Navigator.pop(sheet, AttachFrom.photos),
+            ),
+            ListTile(
+              leading: const Icon(Icons.picture_as_pdf_outlined),
+              title: const Text('File'),
+              onTap: () => Navigator.pop(sheet, AttachFrom.files),
+            ),
+          ],
         ),
       ),
     );
@@ -97,6 +93,7 @@ class _ComposerState extends State<Composer> {
           TextField(
             controller: _text,
             focusNode: _focus,
+            contextMenuBuilder: supportContextMenu(context),
             minLines: 1,
             maxLines: 5,
             keyboardType: TextInputType.multiline,

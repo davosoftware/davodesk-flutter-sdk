@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:davodesk_flutter/davodesk_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart' as m;
 import 'package:shared_preferences_platform_interface/in_memory_shared_preferences_async.dart';
 import 'package:shared_preferences_platform_interface/shared_preferences_async_platform_interface.dart';
 
@@ -260,6 +261,78 @@ void main() {
       expect(tester.takeException(), isNull);
       await finish(tester);
     },
+  );
+
+  // App feedback spec §7: this host is on Flutter's own Material, whose overlay has no
+  // material_ui words.
+  testWidgets('the attachment sheet opens in an app on Flutter Material', (
+    tester,
+  ) async {
+    final (:context, api: _, :sockets, events: _) = await host(tester);
+    await DavoDesk.ask(context, 'My card was declined');
+    await tester.pumpAndSettle();
+    // With the team, on a ticket: the chat takes files.
+    sockets.last.trigger('session', {
+      'id': 'cs1',
+      'status': 'live',
+      'ticket_id': 't1',
+      'messages': <Object?>[],
+    });
+    await tester.pumpAndSettle();
+    await tester.tap(find.bySemanticsLabel('Attach'));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    expect(find.text('Photo'), findsOneWidget);
+    expect(find.text('File'), findsOneWidget);
+    await finish(tester);
+  });
+
+  testWidgets(
+    'the text toolbar opens in an app on Flutter Material',
+    (tester) async {
+      final (:context, api: _, sockets: _, events: _) = await host(
+        tester,
+        api: FakeApi()
+          ..ticketsById = {
+            't1': {
+              ...ticketJson('t1', status: 'resolved'),
+              'satisfaction': {
+                'requested_at': '2026-11-05T10:00:00.000Z',
+                'rating': null,
+              },
+            },
+          },
+      );
+      // Every text field the SDK has: the form, Help's search, a rating's
+      // comment, and the chat's box.
+      final opens = <String, Future<void> Function()>{
+        'contact': () => DavoDesk.show(context, page: DavoDeskPage.contact),
+        'help': () => DavoDesk.show(context, page: DavoDeskPage.help),
+        'rating': () => DavoDesk.openTicket(context, 't1'),
+        'chat': () => DavoDesk.ask(context, 'Hello'),
+      };
+      for (final MapEntry(key: where, value: open) in opens.entries) {
+        unawaited(open());
+        await tester.pumpAndSettle();
+        final field = find.byType(m.TextField).first;
+        await tester.enterText(field, 'Some words here');
+        await tester.longPress(field);
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull, reason: where);
+        expect(
+          find.byType(m.AdaptiveTextSelectionToolbar),
+          findsOneWidget,
+          reason: where,
+        );
+        Navigator.of(context).popUntil((route) => route.isFirst);
+        await tester.pumpAndSettle();
+      }
+      await finish(tester);
+    },
+    variant: const TargetPlatformVariant({
+      TargetPlatform.android,
+      TargetPlatform.iOS,
+    }),
   );
 
   testWidgets('openTicket opens that ticket', (tester) async {
